@@ -2,7 +2,7 @@
 ------------------------------------
 
 ### TODO:
-#### CLIENT
+#### CLIENT (setup structure: Hegelund)
 
 * Establish connection on startup
 * Make requests to server
@@ -12,14 +12,14 @@
 * Navigation
 * Error management
 ------------------------------------
-#### SERVER
+#### SERVER (setup structure: Bohlin)
 
 * Setup internal server (provided)
 * Recieve requests from client (see provided protocol)
 * Make requests to DB (CRUD)
 * Error management
 ------------------------------------
-#### DATABASE
+#### DATABASE (setup DB for HNS: Will)
 
 * Interface:
 * To HNS at first
