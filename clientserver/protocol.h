@@ -9,7 +9,7 @@
 
 enum class Protocol {
         UNDEFINED      = 0, // not used in protocol
-            
+
         /* Command codes, client -> server */
         COM_LIST_NG    = 1, // list newsgroups
         COM_CREATE_NG  = 2, // create newsgroup
