@@ -1,6 +1,6 @@
 ## Newsarticle program (c++ project)
 
-Ses nästa gång: tisdag 3/4 kl 14:00
+Ses nästa gång: torsdag 11/4 kl 14:00
 ------------------------------------
 
 ### TODO:
