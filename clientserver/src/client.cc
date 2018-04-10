@@ -1,3 +1,4 @@
+#include "../protocol.h"
 #include "../connection.h"
 #include "../connectionclosedexception.h"
 
@@ -5,6 +6,7 @@
 #include <string>
 #include <stdexcept>
 #include <cstdlib>
+#include <sstream>
 
 using namespace std;
 
@@ -30,6 +32,13 @@ string readString(const Connection& conn) {
 	return s;
 }
 
+/*
+ * Writes command to server
+ */
+void writeCmd(const Connection& conn, protocol){
+
+}
+
 int main(int argc, char* argv[]) {
 	if (argc != 3) {
 		cerr << "Usage: myclient host-name port-number" << endl;
@@ -52,16 +61,18 @@ int main(int argc, char* argv[]) {
 	
 	cout << "Command:" << endl;
 	cout << "List newgroups = list all newsgroups" << endl;
-	cout << "Create newsgroup name = create new newsgroup with specified name" << endl;
-	cout << "Delete newsgroup name = delete newsgroup with specified name" << endl;
-	cout << "List articles newsgroup = list all articles in specified newsgroup" << endl;
-	cout << "Read article = read an article in a newsgroup" << endl;
-	cout << "Write article = write article in a newsgroup" << endl;
-	cout << "Delete article = delete article in a newsgroup" << endl;
+	cout << "Create newsgroup <name> = create new newsgroup with specified name" << endl;
+	cout << "Delete newsgroup <name> = delete newsgroup with specified name" << endl;
+	cout << "List articles <newsgroup> = list all articles in specified newsgroup" << endl;
+	cout << "Read <newsgroup> <article> = read an article in a newsgroup" << endl;
+	cout << "Write <newsgroup> <article> = write article in a newsgroup" << endl;
+	cout << "Delete <newsgroup> <article> = delete article in a newsgroup" << endl;
 	string cmd;
-	while (cin >> cmd) {
+	while (true) {
+		getline(cin, cmd);
 		try {
-			if(cmd == "List newsgroup"){
+			if(cmd == "List newsgroups"){
+				writeCmd()
 				cout << "Listing newgroups...." << endl;
 			}
 		} catch (ConnectionClosedException&) {
