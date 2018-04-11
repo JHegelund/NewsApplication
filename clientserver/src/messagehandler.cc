@@ -43,7 +43,7 @@ MessageHandler::MessageHandler(const Connection& conn) {
  * @throws ConnectionClosedException
  *             If the server died
  */
-void MessageHandler::sendCode(const Connection& conn, int code){
+void MessageHandler::sendCode(const Connection& conn, const size_t code){
 	sendByte(conn, code);
 }
 
@@ -87,7 +87,7 @@ void MessageHandler::sendIntParameter(const Connection& conn, int param){
  * @throws ConnectionClosedException
  *             If the server died
  */
-void MessageHandler::sendStringParameter(const Connection& conn, String param){
+void MessageHandler::sendStringParameter(const Connection& conn, string param){
 	sendCode(conn, Protocol::PAR_STRING);
 	sendInt(conn, param.length());
 	for (int i = 0; i < param.length(); i++) {
@@ -105,8 +105,8 @@ void MessageHandler::sendStringParameter(const Connection& conn, String param){
  * @throws ConnectionClosedException
  *             If the server died
  */
-int MessageHandler::recvCode(){
-	int code = recvByte();
+int MessageHandler::recvCode(const Connection& conn){
+	int code = recvByte(conn);
 	//logWindow.logCode(code);
 	return code;
 }
@@ -118,14 +118,14 @@ int MessageHandler::recvCode(){
  * @throws ConnectionClosedException
  *             If the server died
  */
-int MessageHandler::recvInt(){
-	int b1 = recvByte();
+int MessageHandler::recvInt(const Connection& conn){
+	int b1 = recvByte(conn);
 	//logWindow.logByte(b1);
-	int b2 = recvByte();
+	int b2 = recvByte(conn);
 	//logWindow.logByte(b2);
-	int b3 = recvByte();
+	int b3 = recvByte(conn);
 	//logWindow.logByte(b3);
-	int b4 = recvByte();
+	int b4 = recvByte(conn);
 	//logWindow.logByte(b4);
 
 	return b1 << 24 | b2 << 16 | b3 << 8 | b4;
@@ -138,12 +138,12 @@ int MessageHandler::recvInt(){
  * @throws ConnectionClosedException
  *             If the server died
  */
-int MessageHandler::recvIntParameter(){
-	int code = recvCode();
+int MessageHandler::recvIntParameter(const Connection& conn){
+	int code = recvCode(conn);
 	if (code != Protocol::PAR_NUM) {
 		cout << "Protocol Violation, Receive numeric parameter" << endl;
 	}
-	return recvInt();
+	return recvInt(conn);
 }
 
 /**
@@ -153,16 +153,17 @@ int MessageHandler::recvIntParameter(){
  * @throws ConnectionClosedException
  *             If the server died
  */
-String MessageHandler::recvStringParameter(){
-	int code = recvCode();
+string MessageHandler::recvStringParameter(const Connection& conn){
+	int code = recvCode(conn);
 	if (code != Protocol::PAR_STRING) {
 		cout << "Protocol Violation, Receive string parameter" << endl;
 	}
-	int n = recvInt();
+	int n = recvInt(conn);
 	if (n < 0) {
 		cout << "Receive string parameter, Number of characters < 0" << endl;
 	}
 	//Write stringbuffer for C++
+
 	/*StringBuffer result = new StringBuffer(n);
 	for (int i = 1; i <= n; i++) {
 		char ch = (char) conn.read();

@@ -1,12 +1,15 @@
 #include "../protocol.h"
 #include "../connection.h"
 #include "../connectionclosedexception.h"
+#include "messagehandler.h"
+#include "newsgroup.h"
 
 #include <iostream>
 #include <string>
 #include <stdexcept>
 #include <cstdlib>
 #include <sstream>
+#include <vector>
 
 using namespace std;
 
@@ -33,10 +36,35 @@ string readString(const Connection& conn) {
 }
 
 /*
- * Writes command to server
+ * Writes and receives list newsgroups command to and from server
  */
-void writeCmd(const Connection& conn, protocol){
+void listNG(const Connection& conn){
+	MessageHandler::sendCode(conn, Protocol::COM_LIST_NG);
+	MessageHandler::sendCode(conn, Protocol::COM_END);
 
+	if(MessageHandler::recvCode(conn) == Protocol::ANS_LIST_NG){
+		vector<Newsgroup> ngs;
+		int num = MessageHandler::recvIntParameter(conn);
+		for(int i = 0; i < num; i++){
+			int id = MessageHandler::recvIntParameter(conn);
+			string name = MessageHandler::recvStringParameter(conn);
+			Newsgroup ng(id, name);
+			ngs.push_back(ng);
+		}
+	} else {
+
+	}
+
+	/*
+	 * Output newsgroups to client
+	 */
+	if(MessageHandler::recvCode(conn) != Protocol::ANS_END){
+		cout << "Protocol Violation" << endl;
+	} else {
+		for(Newsgroup& ng : ngs){
+			cout << ng.id << " " << ng.name << endl;
+		}
+	}
 }
 
 int main(int argc, char* argv[]) {
@@ -72,8 +100,8 @@ int main(int argc, char* argv[]) {
 		getline(cin, cmd);
 		try {
 			if(cmd == "List newsgroups"){
-				writeCmd()
 				cout << "Listing newgroups...." << endl;
+				listNG(conn);
 			}
 		} catch (ConnectionClosedException&) {
 			cout << " no reply from server. Exiting." << endl;

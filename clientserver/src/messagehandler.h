@@ -24,21 +24,22 @@ public:
 	 */
 	//void setLogWindow(Logger logWindow);
 
-	void sendCode(const Connection& conn, int code);
-	void sendInt(const Connection& conn, int value);
-	void sendIntParameter(const Connection& conn, int param);
-	void sendStringParameter(const Connection& conn, String param);
-	int recvCode();
-	int recvInt();
-	int recvIntParameter();
-	String recvStringParameter();		
+	static void sendCode(const Connection& conn, const size_t code);
+	static void sendInt(const Connection& conn, int value);
+	static void sendIntParameter(const Connection& conn, int param);
+	static void sendStringParameter(const Connection& conn, string param);
+	static int recvCode(const Connection& conn);
+	static int recvInt(const Connection& conn);
+	static int recvIntParameter(const Connection& conn);
+	static string recvStringParameter(const Connection& conn);		
 
 private:
 	//Connection conn; // the connection
 	//Logger logWindow; // the log window
 
-	void sendByte(const Connection& conn, int code);
-	int recvByte(const Connection& conn);
+	static void sendByte(const Connection& conn, int code);
+	static int recvByte(const Connection& conn);
 
 	
-}
+};
+#endif
