@@ -24,15 +24,15 @@ LDFLAGS   = -g -L..
 LDLIBS = -lclientserver
 
 # Targets
-PROGS = mainserver client
+PROGS = mainserver
 #PROGS = client
 
 all: $(PROGS)
 
 # Targets rely on implicit rules for compiling and linking
 # The dependency on libclientserver.a is not defined.
-mainserver: mainserver.o
-client: client.o
+mainserver: mainserver.o databaseHNS.o
+#client: client.o
 
 # Phony targets
 .PHONY: all clean distclean

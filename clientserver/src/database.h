@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <utility>
 
 typedef struct {
   std::string author;
@@ -17,13 +18,14 @@ typedef struct {
 
 class Database{
   public:
-    virtual bool deleteNewsGroup(int index);
-    virtual bool createNewsGroup(std::string name);
-    virtual std::vector<std::string> listNewsGroups();
-    virtual bool deleteArticle(int& newsGroup, int& article);
-    virtual bool createArticle(int& newsGroup, std::string& title, std::string& article, std::string& author);
-    virtual Article getArticle(int& newsGroup, int& index) const;
-    virtual std::vector<std::string> listArticles(int& newsGroup);
+    virtual ~Database() = default;
+    virtual bool deleteNewsGroup(int index) = 0;
+    virtual bool createNewsGroup(std::string name) = 0;
+    virtual std::vector<std::pair<int, std::string>> listNewsGroups() = 0;
+    virtual bool deleteArticle(int& newsGroup, int& article) = 0;
+    virtual bool createArticle(int& newsGroup, std::string& title, std::string& article, std::string& author) = 0;
+    virtual Article getArticle(int& newsGroup, int& index) const = 0;
+    virtual std::vector<std::pair<int, std::string>> listArticles(int& newsGroup) = 0;
 };
 
 #endif

@@ -1,6 +1,8 @@
 #include "databaseHNS.h"
+#include <iostream>
 
 
+DatabaseHNS::DatabaseHNS() {}
 
 bool DatabaseHNS::deleteNewsGroup(int index){
   newsGroups.erase(newsGroups.begin()+index);
@@ -10,11 +12,12 @@ bool DatabaseHNS::deleteNewsGroup(int index){
 bool DatabaseHNS::createNewsGroup(std::string name){
   NewsGroup temp = NewsGroup();
   temp.name = name;
-  newsGroups.push_back(temp);
+  int id = generateIndex();
+  newsGroups.push_back(make_pair(id, temp));
   return true;
 }
 
-std::vector<std::string> DatabaseHNS::listNewsGroups(){
+std::vector<std::pair<int, std::string>> DatabaseHNS::listNewsGroups(){
   std::vector<std::string> newsGroupNames;
   auto itr = newsGroups.begin();
   while(itr != newsGroups.end()){
@@ -42,7 +45,11 @@ Article DatabaseHNS::getArticle(int& newsGroup, int& index) const{
   return newsGroups.at(newsGroup).articles.at(index);
 }
 
-std::vector<std::string> DatabaseHNS::listArticles(int& newsGroup){
+bool DatabaseHNS::newsGroupExists(unsigned int newsGroup){
+  return newsGroup > newsGroups.size();
+}
+
+std::vector<std::pair<int, std::string>> DatabaseHNS::listArticles(int& newsGroup){
   std::vector<std::string> articleNames;
   auto itr = newsGroups.at(newsGroup).articles.begin();
   while(itr != newsGroups.at(newsGroup).articles.end()){
@@ -52,3 +59,6 @@ std::vector<std::string> DatabaseHNS::listArticles(int& newsGroup){
   return articleNames;
 }
 
+int DatabaseHNS::generateIndex(){
+  return index++;
+}
