@@ -5,23 +5,23 @@
 #include <string>
 
 typedef struct {
-  string author;
-  string title;
-  string article;
+  std::string author;
+  std::string title;
+  std::string article;
 } Article;
 
 typedef struct {
-  string name;
+  std::string name;
   std::vector<Article> articles;
 } NewsGroup;
 
 class Database{
   public:
     virtual bool deleteNewsGroup(int index);
-    virtual bool createNewsGroup(string name);
+    virtual bool createNewsGroup(std::string name);
     virtual std::vector<std::string> listNewsGroups();
     virtual bool deleteArticle(int& newsGroup, int& article);
-    virtual bool createArticle(int& newsGroup, string& title, string& article);
+    virtual bool createArticle(int& newsGroup, std::string& title, std::string& article, std::string& author);
     virtual Article getArticle(int& newsGroup, int& index) const;
     virtual std::vector<std::string> listArticles(int& newsGroup);
 };
