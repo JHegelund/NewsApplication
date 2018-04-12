@@ -67,6 +67,68 @@ void listNG(const Connection& conn){
 	}
 }
 
+/*
+ * List articles within specified newgroup
+ */
+void listArticles(const Connection& conn, int ngID){
+	MessageHandler::sendCode(conn, Protocol::COM_LIST_ART);
+	MessageHandler::sendIntParameter(conn, ngID);
+	MessageHandler::sendCode(conn, Protocol::COM_END);
+
+	if(MessageHandler::recvCode(conn) == Protocol::ANS_LIST_ART){
+		int ans = MessageHandler::recvCode(conn);
+		if(code == Protocol::ANS_ACK){
+			vector<Article> arts;
+			int num = MessageHandler::recvIntParameter(conn);
+			for(int i = 0; i < num; i++){
+				int id = MessageHandler::recvIntParameter(conn);
+				string name = MessageHandler::recvStringParameter(conn);
+				Article art(id, name);
+				arts.push_back(art);
+			}
+		} else if(code == Protocol::ANS_NACK){
+			int nack = MessageHandler::recvCode(conn);
+			if(nack == Protocol::ERR_NG_DOES_NOT_EXIST){
+				cout << "Error NG does not exist" << endl;
+			}
+		}
+		
+		if(MessageHandler::recvCode(conn) != Protocol::ANS_END){
+			cout << "Protocol Violation" << endl;
+		} else {
+			for(Article& a : arts){
+				cout << a.id << " " << a.name << endl;
+			}
+		}
+	}
+}
+
+/*
+ * Create newgroup with specified name
+ */
+void createNG(const Connection& conn, string name){
+	MessageHandler::sendCode(conn, Protocol::COM_CREATE_NG);
+	MessageHandler::sendStringParameter(conn, name);
+	MessageHandler::sendCode(conn, Protocol::COM_END);
+
+	if(MessageHandler::recvCode(conn) == Protocol::ANS_CREATE_NG){
+		int ans = MessageHandler::recvCode(conn);
+		if(ans == Protocol::ANS_ACK){
+			if(MessageHandler::recvCode(conn) == ANS_END){
+				cout << "Article added" << endl;
+			} else {
+				cout << "Protocol Violation" << endl;
+			}
+		} else if(ans == Protocol::ANS_NACK){
+			if(MessageHandler::recvCode(conn) == Protocol::ERR_NG_ALREADY_EXIST){
+				cout << "Newgroup already exist" << endl;
+			} else {
+				cout << "Protocol Violation" << endl;
+			}
+		}
+	}
+}
+
 int main(int argc, char* argv[]) {
 	if (argc != 3) {
 		cerr << "Usage: myclient host-name port-number" << endl;
@@ -89,19 +151,34 @@ int main(int argc, char* argv[]) {
 	
 	cout << "Command:" << endl;
 	cout << "List newgroups = list all newsgroups" << endl;
-	cout << "Create newsgroup <name> = create new newsgroup with specified name" << endl;
-	cout << "Delete newsgroup <name> = delete newsgroup with specified name" << endl;
-	cout << "List articles <newsgroup> = list all articles in specified newsgroup" << endl;
-	cout << "Read <newsgroup> <article> = read an article in a newsgroup" << endl;
-	cout << "Write <newsgroup> <article> = write article in a newsgroup" << endl;
-	cout << "Delete <newsgroup> <article> = delete article in a newsgroup" << endl;
+	cout << "Create newsgroup <newsgroup_name> = create new newsgroup with specified name" << endl;
+	cout << "Delete newsgroup <newsgroup_name> = delete newsgroup with specified name" << endl;
+	cout << "List articles <newsgroup_id> = list all articles in specified newsgroup id" << endl;
+	cout << "Read <newsgroup_id> <article_id> = read an article in a newsgroup" << endl;
+	cout << "Write <newsgroup_id> <article_name> = write article in a newsgroup" << endl;
+	cout << "Delete <newsgroup_id> <article_id> = delete article in a newsgroup" << endl;
 	string cmd;
-	while (true) {
-		getline(cin, cmd);
+	while (cin >> cmd) {
 		try {
-			if(cmd == "List newsgroups"){
-				cout << "Listing newgroups...." << endl;
-				listNG(conn);
+			if(cmd == "List"){
+				cin >> cmd;
+				if(cmd == "newsgroups"){
+					cout << "Listing newgroups...." << endl;
+					listNG(conn);
+				} else if(cmd == "articles"){
+					//Read newsgroup id
+					cin >> cmd;
+					int id = stoi(cmd);
+					//List articles within this newsgroup
+					listArticles(conn, id);
+				}
+			} else if (cmd == "Create"){
+				cin >> cmd;
+				if(cmd == "newsgroup"){
+					cin >> cmd;
+					createNG(conn, cmd);
+				}
+
 			}
 		} catch (ConnectionClosedException&) {
 			cout << " no reply from server. Exiting." << endl;
