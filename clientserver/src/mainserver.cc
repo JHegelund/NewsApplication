@@ -2,8 +2,11 @@
 #include "server.h"
 #include "connection.h"
 #include "connectionclosedexception.h"
+#include <iostream>
 
 using namespace std;
+
+
 
 int readNumber(const shared_ptr<Connection>& conn) {
 	unsigned char byte1 = conn->read();
@@ -22,42 +25,142 @@ string readString(const shared_ptr<Connection>& conn) {
 	return word;
 }
 
-void listNewsgroups(const shared_ptr<Connection>& conn) {
-	// Fetch needed data from Database
-	conn->write(ANS_LIST_NG); // Send ACK
-	// Send num_p of how many Newsgroups there are
-	// Send [num_p string_p]* i.e. list of Newsgroups ID and name
-	conn->write(Protocol.ANS_END); // Send ANS_END
+int readNumP(const shared_ptr<Connection>& conn) {
+	if (static_cast<Protocol>(conn->read()) != Protocol::PAR_NUM) {
+		// throw exception
+	}
+	return readNumber(conn);
 }
 
-void createNewsgroups(const shared_ptr<Connection>& conn) {
-	// Format: COM_CREATE_NG string_p COM_END
-	conn->write(Protocol.ANS_CREATE_NG); // Send ACK
-	name = readString(conn); // Read the string_p
+// Sending a raw number N, i.e. without the PAR_NUM
+void sendNumber(const shared_ptr<Connection>& conn, int number) {
+	unsigned char byte1 = number >> 24;
+	unsigned char byte2 = number >> 16;
+	unsigned char byte3 = number >> 8;
+	unsigned char byte4 = number;
+	conn->write(byte1);
+	conn->write(byte2);
+	conn->write(byte3);
+	conn->write(byte4);
+}
 
-	// Create the Newsgroup in Database
-	if(database.createNewsgroup(name)) {
+void sendString(const shared_ptr<Connection>& conn, string s) {
+	conn->write(static_cast<unsigned char>(Protocol::PAR_STRING));
+	sendNumber(conn, s.length());
+	for (unsigned char& c : s) {
+		conn->write(c);
+	}
+}
+
+void sendNumP(const shared_ptr<Connection>& conn, int number) {
+	conn->write(static_cast<unsigned char>(Protocol::PAR_NUM));
+	sendNumber(conn, number);
+}
+
+void listNewsgroups(const shared_ptr<Connection>& conn, Database& db) {
+	if (static_cast<Protocol>(conn->read()) != Protocol::COM_END)
+		return; // FAIL
+	conn->write(static_cast<unsigned char>(Protocol::ANS_LIST_NG)); // Send ACK
+	vector<string> newsGroups = db.listNewsgroups();
+
+	// Send num_p of how many Newsgroups there are
+	sendNumP(conn, newsGroups.size());
+
+	// Send [num_p string_p]* i.e. list of Newsgroups ID and name
+	for (auto& s : newsGroups) {
+		// Should send both name and index of every Newsgroup
+		sendString(conn, s);
+	}
+	conn->write(static_cast<unsigned char>(Protocol::ANS_END)); // Send ANS_END
+}
+
+void createNewsgroups(const shared_ptr<Connection>& conn, Database& db) {
+	string newsgroupName = readString(conn);
+	if (static_cast<Protocol>(conn->read()) != Protocol::COM_END)
+		return; // FAIL
+
+	conn->write(static_cast<unsigned char>(Protocol::ANS_CREATE_NG)); 
+	if(db.createNewsgroup(newsgroupName)) {
 		// Success
-		conn->write(Protocol.ANS_ACK);
+		conn->write(static_cast<unsigned char>(Protocol::ANS_ACK));
 	} else {
 		// Fail
-		conn->write(Protocol.ANS_NAK);
-		conn->write(Protocol.ERR_NG_ALREADY_EXISTS);
+		conn->write(static_cast<unsigned char>(Protocol::ANS_NAK));
+		conn->write(static_cast<unsigned char>(Protocol::ERR_NG_ALREADY_EXISTS));
 	}
-	conn->write(Protocol.ANS_END); // Send ANS_END
+	conn->write(static_cast<unsigned char>(Protocol::ANS_END));
 }
 
-void deleteNewsgroup(const shared_ptr<Connection>& conn) {
-	conn->write(Protocol.ANS_DELETE_NG); // Send ACK
+void deleteNewsgroup(const shared_ptr<Connection>& conn, Database& db) {
+	string newsgroupName = readString(conn);
+	if (static_cast<Protocol>(conn->read()) != Protocol::COM_END)
+		return; // FAIL
+
+	conn->write(static_cast<unsigned char>(Protocol::ANS_DELETE_NG)); // Send ACK
+	if(db.deleteNewsgroup(newsgroupName)) {
+		conn->write(static_cast<unsigned char>(Protocol::ANS_ACK));
+	} else {
+		conn->write(static_cast<unsigned char>(Protocol::ANS_NAK));
+		conn->write(static_cast<unsigned char>(Protocol::ERR_NG_DOES_NOT_EXIST));
+	}
+	conn->write(static_cast<unsigned char>(Protocol::ANS_END));
 }
 
-void listArticles(const shared_ptr<Connection>& conn) {}
+void listArticles(const shared_ptr<Connection>& conn, Database& db) {
+	int newsgroupIndex = readNumber(conn);
+	if (static_cast<Protocol>(conn->read()) != Protocol::COM_END)
+		return; // FAIL
+	
+	vector articles = db.listArticles(newsgroupIndex);
+	// Have to give different exceptions depending on if newsgroup does not exist
+	// or if it exist but is empty.
 
-void createArticle(const shared_ptr<Connection>& conn) {}
+	conn->write(static_cast<unsigned char>(Protocol::ANS_END));
+}
 
-void deleteArticle(const shared_ptr<Connection>& conn) {}
+void createArticle(const shared_ptr<Connection>& conn, Database& db) {
+	int newsgroupIndex = readNumP(conn);
+	string title = readString(conn);
+	string author = readString(conn);
+	string text = readString(conn);
+	if (static_cast<Protocol>(conn->read()) != Protocol::COM_END)
+		return; // FAIL
 
-void getArticle(const shared_ptr<Connection>& conn) {}
+	conn->write(static_cast<unsigned char>(Protocol::ANS_CREATE_ART));
+	if(db.createArticle(newsgroupIndex, title, author, text)) {
+		conn->write(static_cast<unsigned char>(Protocol::ANS_ACK));
+	} else {
+		conn->write(static_cast<unsigned char>(Protocol::ANS_NAK));
+		conn->write(static_cast<unsigned char>(Protocol::ERR_NG_DOES_NOT_EXIST));
+	}
+	conn->write(static_cast<unsigned char>(Protocol::ANS_END));
+}
+
+void deleteArticle(const shared_ptr<Connection>& conn, Database& db) {
+	int newsgroupIndex = readNumP(conn);
+	int articleIndex = readNumP(conn);
+	if (static_cast<Protocol>(conn->read()) != Protocol::COM_END)
+		return; // FAIL
+
+	conn->write(static_cast<unsigned char>(Protocol::ANS_DELETE_ART));
+	if(db.deleteArticle(newsgroupIndex, articleIndex)) {
+		conn->write(static_cast<unsigned char>(Protocol::ANS_ACK));
+	} else {
+		conn->write(static_cast<unsigned char>(Protocol::ANS_NAK));
+		// Need exceptions to know if it's the article or NG that does not exist.
+	}
+	conn->write(static_cast<unsigned char>(Protocol::ANS_END));
+}
+
+void getArticle(const shared_ptr<Connection>& conn, Database& db) {
+	int newsgroupIndex = readNumP(conn);
+	int articleIndex = readNumP(conn);
+	if (static_cast<Protocol>(conn->read()) != Protocol::COM_END)
+		return; // FAIL
+
+	conn->write(static_cast<unsigned char>(Protocol::ANS_GET_ART));
+	// Fetch, handle and send article
+}
 
 
 int main(int argc, char* argv[]){
@@ -79,27 +182,30 @@ int main(int argc, char* argv[]){
 		cerr << "Server initialization error." << endl;
 		exit(1);
 	}
+	Database db;
 
 	while (true) {
 		auto conn = server.waitForActivity();
+		Protocol p = Protocol::UNDEFINED;
 		if (conn != nullptr) {
 			try {
 				// Read commandbyte
-				switch(conn->read()) {
-					case Protocol.COM_LIST_NG:
-						listNewsgroups(conn); break;
-					case Protocol.COM_CREATE_NG:
-						createNewsgroups(conn); break;
-					case Protocol.COM_DELETE_NG:
-						deleteNewsgroup(conn); break;
-					case Protocol.COM_LIST_ART:
-						listArticles(conn); break;
-					case Protocol.COM_CREATE_ART:
-						createArticle(conn); break;
-					case Protocol.COM_DELETE_ART:
-						deleteArticle(conn); break;
-					case Protocol.COM_GET_ART:
-						getArticle(conn); break;
+				p = static_cast<Protocol>(conn->read());
+				switch(p) {
+					case Protocol::COM_LIST_NG:
+						listNewsgroups(conn, db); break;
+					case Protocol::COM_CREATE_NG:
+						createNewsgroups(conn, db); break;
+					case Protocol::COM_DELETE_NG:
+						deleteNewsgroup(conn, db); break;
+					case Protocol::COM_LIST_ART:
+						listArticles(conn, db); break;
+					case Protocol::COM_CREATE_ART:
+						createArticle(conn, db); break;
+					case Protocol::COM_DELETE_ART:
+						deleteArticle(conn, db); break;
+					case Protocol::COM_GET_ART:
+						getArticle(conn, db); break;
 					default: // Throw protocolexception
 				}
 			} catch (ConnectionClosedException&) {
@@ -114,4 +220,3 @@ int main(int argc, char* argv[]){
 
 		}
 	}
-}
