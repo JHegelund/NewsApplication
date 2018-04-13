@@ -64,16 +64,15 @@ void listNewsGroups(const shared_ptr<Connection>& conn, Database& db) {
 	if (static_cast<Protocol>(conn->read()) != Protocol::COM_END)
 		return; // FAIL
 	conn->write(static_cast<unsigned char>(Protocol::ANS_LIST_NG)); // Send ACK
-	vector<string> newsGroups = db.listNewsGroups();
+	vector<pair<int, string>> newsGroups = db.listNewsGroups();
 
 	// Send num_p of how many Newsgroups there are
 	sendNumP(conn, newsGroups.size());
 
 	// Send [num_p string_p]* i.e. list of Newsgroups ID and name
-	for (auto& s : newsGroups) {
-		sendNumP(conn, 1);
-		// Should send both name and index of every Newsgroup
-		sendString(conn, s);
+	for (auto& ng : newsGroups) {
+		sendNumP(conn, ng.first);
+		sendString(conn, ng.second);
 	}
 	conn->write(static_cast<unsigned char>(Protocol::ANS_END)); // Send ANS_END
 }
@@ -117,10 +116,18 @@ void listArticles(const shared_ptr<Connection>& conn, Database& db) {
 	if (static_cast<Protocol>(conn->read()) != Protocol::COM_END)
 		return; // FAIL
 
-	vector<string> articles = db.listArticles(newsGroupIndex);
-	// Have to give different exceptions depending on if newsGroup does not exist
-	// or if it exist but is empty.
-
+	vector<pair<int, string>> articles = db.listArticles(newsGroupIndex);
+	if (articles.size()) { // Have to throw exception
+		conn->write(static_cast<unsigned char>(Protocol::ANS_NAK));
+		conn->write(static_cast<unsigned char>(Protocol::ERR_NG_DOES_NOT_EXIST));
+	} else {
+		conn->write(static_cast<unsigned char>(Protocol::ANS_ACK));
+		sendNumP(conn, articles.size());
+		for (auto& art : articles) {
+			sendNumP(conn, art.first);
+			sendString(conn, art.second);
+		}
+	}
 	conn->write(static_cast<unsigned char>(Protocol::ANS_END));
 }
 

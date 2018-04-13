@@ -1,6 +1,7 @@
 #include "databaseHNS.h"
 #include <iostream>
 
+using std::make_pair;
 
 DatabaseHNS::DatabaseHNS() {}
 
@@ -18,11 +19,9 @@ bool DatabaseHNS::createNewsGroup(std::string name){
 }
 
 std::vector<std::pair<int, std::string>> DatabaseHNS::listNewsGroups(){
-  std::vector<std::string> newsGroupNames;
-  auto itr = newsGroups.begin();
-  while(itr != newsGroups.end()){
-    newsGroupNames.push_back(itr->name);
-    itr++;
+  std::vector<std::pair<int, std::string>> newsGroupNames;
+  for (auto& ng : newsGroups) {
+    newsGroupNames.push_back(make_pair(ng.first, ng.second.name));
   }
   return newsGroupNames;
 }
