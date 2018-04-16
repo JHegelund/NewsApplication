@@ -2,7 +2,6 @@
 #include "../connection.h"
 #include "../connectionclosedexception.h"
 #include "messagehandler.h"
-#include "newsgroup.h"
 
 #include <iostream>
 #include <string>
@@ -10,6 +9,7 @@
 #include <cstdlib>
 #include <sstream>
 #include <vector>
+#include <utility>
 
 using namespace std;
 
@@ -42,17 +42,18 @@ void listNG(const Connection& conn){
 	MessageHandler::sendCode(conn, Protocol::COM_LIST_NG);
 	MessageHandler::sendCode(conn, Protocol::COM_END);
 
+	vector<pair<int, string>> ngs;
 	if(MessageHandler::recvCode(conn) == Protocol::ANS_LIST_NG){
-		vector<Newsgroup> ngs;
 		int num = MessageHandler::recvIntParameter(conn);
 		for(int i = 0; i < num; i++){
 			int id = MessageHandler::recvIntParameter(conn);
 			string name = MessageHandler::recvStringParameter(conn);
-			Newsgroup ng(id, name);
-			ngs.push_back(ng);
+			//ngs[i].first = id;
+			//ngs[i].second = name;
+			ngs.push_back(make_pair(id, name));
 		}
 	} else {
-
+		cout << "Protocol Violation" << endl;
 	}
 
 	/*
@@ -61,8 +62,8 @@ void listNG(const Connection& conn){
 	if(MessageHandler::recvCode(conn) != Protocol::ANS_END){
 		cout << "Protocol Violation" << endl;
 	} else {
-		for(Newsgroup& ng : ngs){
-			cout << ng.id << " " << ng.name << endl;
+		for(pair<int, string>& ng : ngs){
+			cout << ng.first << " " << ng.second << endl;
 		}
 	}
 }
@@ -75,29 +76,27 @@ void listArticles(const Connection& conn, int ngID){
 	MessageHandler::sendIntParameter(conn, ngID);
 	MessageHandler::sendCode(conn, Protocol::COM_END);
 
+	vector<pair<int, string>> arts;
 	if(MessageHandler::recvCode(conn) == Protocol::ANS_LIST_ART){
 		int ans = MessageHandler::recvCode(conn);
 		if(code == Protocol::ANS_ACK){
-			vector<Article> arts;
 			int num = MessageHandler::recvIntParameter(conn);
 			for(int i = 0; i < num; i++){
 				int id = MessageHandler::recvIntParameter(conn);
 				string name = MessageHandler::recvStringParameter(conn);
-				Article art(id, name);
-				arts.push_back(art);
+				arts.push_back(make_pair(id, name));
 			}
 		} else if(code == Protocol::ANS_NAK){
-			int nack = MessageHandler::recvCode(conn);
-			if(nack == Protocol::ERR_NG_DOES_NOT_EXIST){
-				cout << "Error NG does not exist" << endl;
+			if(MessageHandler::recvCode(conn) == Protocol::ERR_NG_DOES_NOT_EXIST){
+				cout << "Error newsgroup does not exist" << endl;
 			}
 		}
 		
 		if(MessageHandler::recvCode(conn) != Protocol::ANS_END){
 			cout << "Protocol Violation" << endl;
 		} else {
-			for(Article& a : arts){
-				cout << a.id << " " << a.name << endl;
+			for(pair<int, string>& a : arts){
+				cout << a.first << " " << a.second << endl;
 			}
 		}
 	}
@@ -200,11 +199,63 @@ void readArt(const Connection& conn, int ngID, int artID){
 	MessageHandler::sendIntParameter(conn, artID);
 	MessageHandler::sendCode(conn, Protocol::COM_END);
 
+	string author = "";
+	string title = "";
+	string text = "";
+
 	if(MessageHandler::recvCode(conn) == Protocol::ANS_GET_ART){
 		int ans = MessageHandler::recvCode(conn);
+		if(ans == Protocol::ANS_ACK){
+			string author = MessageHandler::recvStringParameter(conn);
+			string title = MessageHandler::recvStringParameter(conn);
+			string text = MessageHandler::recvStringParameter(conn);
+			if(MessageHandler::recvCode(conn) == Protocol::ANS_END){
+				cout << "Author: " << author << "\n" << "Title: " << title << "\n" << text << endl;
+			}
+		} else if(ans == Protocol::ANS_NAK){
+			int nak = MessageHandler::recvCode(conn);
+			if(nak == Protocol::ERR_NG_DOES_NOT_EXIST){
+				cout << "Newsgroup does not exist" << endl;
+			} else if(nak == Protocol::ERR_ART_DOES_NOT_EXIST){
+				cout << "Article does not exist" << endl;
+			}
+			if(MessageHandler::recvCode(conn) != ANS_END){
+				cout << "Protocol Violation" << endl;
+			}
+		}
 	}
 }
 
+int readNgId(string ngID){
+	int id;
+	try{
+		id = stoi(cmd);
+	} catch (exception& e){
+		cerr << "No valid id input for newsgroup." << endl;
+	}
+	return id;
+}
+
+int readArtId(string ngID){
+	int id;
+	try{
+		int id = stoi(cmd);
+	} catch (exception& e){
+		cerr << "No valid id input for article." << endl; 
+	}
+	return id;
+}
+
+void listCommands(){
+	cout << "Commands:" << endl;
+	cout << "List newgroups = list all newsgroups." << endl;
+	cout << "Create newsgroup <newsgroup_name> = create new newsgroup with specified name." << endl;
+	cout << "Delete newsgroup <newsgroup_id> = delete newsgroup with specified name." << endl;
+	cout << "List articles <newsgroup_id> = list all articles in specified newsgroup id." << endl;
+	cout << "Read <newsgroup_id> <article_id> = read an article in a newsgroup." << endl;
+	cout << "Write <newsgroup_id> <article_name> = write article in a newsgroup." << endl;
+	cout << "Delete article <newsgroup_id> <article_id> = delete article in a newsgroup." << endl;
+}
 
 
 int main(int argc, char* argv[]) {
@@ -226,15 +277,9 @@ int main(int argc, char* argv[]) {
 		cerr << "Connection attempt failed" << endl;
 		exit(1);
 	}
-	
-	cout << "Commands:" << endl;
-	cout << "List newgroups = list all newsgroups" << endl;
-	cout << "Create newsgroup <newsgroup_name> = create new newsgroup with specified name" << endl;
-	cout << "Delete newsgroup <newsgroup_id> = delete newsgroup with specified name" << endl;
-	cout << "List articles <newsgroup_id> = list all articles in specified newsgroup id" << endl;
-	cout << "Read <newsgroup_id> <article_id> = read an article in a newsgroup" << endl;
-	cout << "Write <newsgroup_id> <article_name> = write article in a newsgroup" << endl;
-	cout << "Delete article <newsgroup_id> <article_id> = delete article in a newsgroup" << endl;
+
+	cout << "Welcome! Use any of the commands below to use this application." << endl;
+	listCommands();
 	string cmd;
 	while (cin >> cmd) {
 		try {
@@ -246,11 +291,7 @@ int main(int argc, char* argv[]) {
 				} else if(cmd == "articles"){
 					//Read newsgroup id
 					cin >> cmd;
-					try{
-						int id = stoi(cmd);
-					} catch (exception& e){
-						cerr << "No valid id input." << endl;
-					}
+					int ngID = readNgId(cmd);
 					
 					//List articles within this newsgroup
 					listArticles(conn, id);
@@ -265,45 +306,40 @@ int main(int argc, char* argv[]) {
 				cin >> cmd;
 				if(cmd == "newsgroup"){
 					cin >> cmd;
-					try {
-						int id = stoi(cmd);
-					} catch (exception& e){
-						cerr << "No valid id input." << endl;
-					}
+					int ngID = readNgId(cmd);
 					
 					deleteNG(conn, id);
 				} else if (cmd == "article"){
 					cin >> cmd;
-					try{
-						int ngID = stoi(cmd);
-					} catch (exception& e){
-						cerr << "No valid id input for newsgroup." << endl;
-					}
+					int ngID = readNgId(cmd);
 					
 					cin >> cmd;
-					try{
-						int artID = stoi(cmd);
-					} catch (exception& e){
-						cerr << "No valid id input for article." << endl; 
-					}
+					int artID = readArtId(cmd);
+
 					deleteArt(conn, ngID, artID);
 				}
 			} else if (cmd == "Read"){
 				cin >> cmd;
-				try{
-					int ngID = stoi(cmd);
-				} catch(exception& e){
-					cerr << "No valid id input for newsgroup." << endl;
-				}
+				int ngID = readNgId(cmd);
 
 				cin >> cmd;
-				try{
-					int artID = stoi(cmd);
-				} catch(exception& e){
-					cerr << "No valid id input for article." << endl;
-				}
+				int artID = readArtId(cmd);
 
 				readArt(conn, ngID, artID);
+			} else if(cmd == "Write"){
+				cin >> cmd;
+				int ngID = readNgId(cmd);
+				
+
+
+
+
+
+				
+			} else if(cmd == "Help"){
+				listCommands();
+			} else {
+				cout << "Invalid command, write Help to list commands." << endl;
 			}
 		} catch (ConnectionClosedException&) {
 			cout << " no reply from server. Exiting." << endl;
@@ -311,4 +347,3 @@ int main(int argc, char* argv[]) {
 		}
 	}
 }
-
