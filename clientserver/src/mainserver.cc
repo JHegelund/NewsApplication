@@ -92,7 +92,6 @@ void createNewsGroup(const shared_ptr<Connection>& conn, Database& db) {
 		conn->write(static_cast<unsigned char>(Protocol::ANS_NAK));
 		conn->write(static_cast<unsigned char>(Protocol::ERR_NG_ALREADY_EXISTS));
 	}
-	cout << "Finished" << endl;
 	conn->write(static_cast<unsigned char>(Protocol::ANS_END));
 }
 
@@ -112,21 +111,25 @@ void deleteNewsGroup(const shared_ptr<Connection>& conn, Database& db) {
 }
 
 void listArticles(const shared_ptr<Connection>& conn, Database& db) {
-	int newsGroupIndex = readNumber(conn);
+	int newsGroupIndex = readNumP(conn);
 	if (static_cast<Protocol>(conn->read()) != Protocol::COM_END)
 		return; // FAIL
-
-	vector<pair<int, string>> articles = db.listArticles(newsGroupIndex);
-	if (articles.size()) { // Have to throw exception
-		conn->write(static_cast<unsigned char>(Protocol::ANS_NAK));
-		conn->write(static_cast<unsigned char>(Protocol::ERR_NG_DOES_NOT_EXIST));
-	} else {
+	
+	conn->write(static_cast<unsigned char>(Protocol::ANS_LIST_ART));
+	try {
+		vector<pair<int, string>> articles = db.listArticles(newsGroupIndex);
+		
 		conn->write(static_cast<unsigned char>(Protocol::ANS_ACK));
 		sendNumP(conn, articles.size());
 		for (auto& art : articles) {
+			cout << "Success" << endl;
 			sendNumP(conn, art.first);
 			sendString(conn, art.second);
 		}
+	} catch (const char* errorMessage) {
+		conn->write(static_cast<unsigned char>(Protocol::ANS_NAK));
+		conn->write(static_cast<unsigned char>(Protocol::ERR_NG_DOES_NOT_EXIST));
+		std::cerr << errorMessage << std::endl;
 	}
 	conn->write(static_cast<unsigned char>(Protocol::ANS_END));
 }

@@ -78,7 +78,7 @@ bool DatabaseHNS::newsGroupExists(int newsGroup){
   if(newsGroup < 0){
     return false;
   }
-  return newsGroup < newsGroups.size();
+  return static_cast<unsigned int>(newsGroup) <= newsGroups.size();
 }
 
 //returns true if article index is within bounds of the articles list
@@ -97,6 +97,9 @@ bool DatabaseHNS::articleExists(int newsGroup, int article){
 
 //returns a vector of pairs containing <index, name of newsGroup>
 std::vector<std::pair<int, std::string>> DatabaseHNS::listArticles(int& newsGroup){
+  std::cout << newsGroup << std::endl;
+  if (!newsGroupExists(newsGroup))
+    throw "NewsGroup doesn't exist!";
   std::vector<std::pair<int, std::string>> articleNames;
   auto itr = std::find_if(newsGroups.begin(), newsGroups.end(), [&](std::pair<int, NewsGroup> current) -> bool {
     return (current.first == newsGroup);
