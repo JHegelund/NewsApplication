@@ -122,7 +122,6 @@ void listArticles(const shared_ptr<Connection>& conn, Database& db) {
 		conn->write(static_cast<unsigned char>(Protocol::ANS_ACK));
 		sendNumP(conn, articles.size());
 		for (auto& art : articles) {
-			cout << "Success" << endl;
 			sendNumP(conn, art.first);
 			sendString(conn, art.second);
 		}
@@ -163,7 +162,6 @@ void deleteArticle(const shared_ptr<Connection>& conn, Database& db) {
 		conn->write(static_cast<unsigned char>(Protocol::ANS_ACK));
 	} else {
 		conn->write(static_cast<unsigned char>(Protocol::ANS_NAK));
-		// Need exceptions to know if it's the article or NG that does not exist.
 	}
 	conn->write(static_cast<unsigned char>(Protocol::ANS_END));
 }
@@ -176,7 +174,25 @@ void getArticle(const shared_ptr<Connection>& conn, Database& db) {
 
 	conn->write(static_cast<unsigned char>(Protocol::ANS_GET_ART));
 	// Fetch, handle and send article
-	db.getArticle(newsGroupIndex, articleIndex);
+	if (db.newsGroupExists(newsGroupIndex)) {
+		if (db.articleExists(newsGroupIndex, articleIndex)) {
+			conn->write(static_cast<unsigned char>(Protocol::ANS_ACK));
+			Article art = db.getArticle(newsGroupIndex, articleIndex);
+			cout << ":" << art.title << ":" << std::endl;
+			sendString(conn, art.title);
+			cout << "title sent" << std::endl;
+			sendString(conn, art.author);
+			sendString(conn, art.article);
+		} else {
+			conn->write(static_cast<unsigned char>(Protocol::ANS_NAK));
+			conn->write(static_cast<unsigned char>(Protocol::ERR_NG_DOES_NOT_EXIST));
+		}
+	} else {
+		conn->write(static_cast<unsigned char>(Protocol::ANS_NAK));
+		conn->write(static_cast<unsigned char>(Protocol::ERR_NG_DOES_NOT_EXIST));
+	}
+	conn->write(static_cast<unsigned char>(Protocol::ANS_END));
+
 }
 
 

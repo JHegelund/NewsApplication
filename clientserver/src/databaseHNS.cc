@@ -13,7 +13,7 @@ bool DatabaseHNS::deleteNewsGroup(int index){
 bool DatabaseHNS::createNewsGroup(std::string name){
   NewsGroup temp = NewsGroup();
   temp.name = name;
-  int id = generateIndex();
+  int id = generateNewsGroupIndex();
   newsGroups.push_back(make_pair(id, temp));
   return true;
 }
@@ -44,7 +44,7 @@ bool DatabaseHNS::deleteArticle(int& newsGroup, int& article){
 //Adds article to specified newsGroup
 //Takes in (newsGroup, title, article, author), (int, string, string, string) 
 //returns false if the newsGroup doesn't exist
-bool DatabaseHNS::createArticle(int& newsGroup, std::string& title, std::string& article, std::string& author){
+bool DatabaseHNS::createArticle(int& newsGroup, std::string& title, std::string& author, std::string& article){
   Article temp = Article();
   temp.title = title;
   temp.author = author;
@@ -55,7 +55,7 @@ bool DatabaseHNS::createArticle(int& newsGroup, std::string& title, std::string&
   if(it == newsGroups.end()){
     return false;
   }else{
-    it->second.articles.push_back(make_pair(generateIndex(), temp));
+    it->second.articles.push_back(make_pair(generateArticleIndex(), temp));
     return true;
   }
 }
@@ -66,7 +66,7 @@ Article DatabaseHNS::getArticle(int& newsGroup, int& index){
     auto it = std::find_if(newsGroups.begin(), newsGroups.end(), [&](std::pair<int, NewsGroup> current) -> bool {
       return (current.first == newsGroup);
     });
-    auto it2 = std::find_if(it->second.articles.begin(), it->second.articles.begin(), [&](std::pair<int, Article> current) -> bool{
+    auto it2 = std::find_if(it->second.articles.begin(), it->second.articles.end(), [&](std::pair<int, Article> current) -> bool{
       return (current.first == index);
     });
     return it2->second;
@@ -90,9 +90,10 @@ bool DatabaseHNS::articleExists(int newsGroup, int article){
       return (current.first == newsGroup);
     });
     if(itr != newsGroups.end()){
-      return article < itr->second.articles.size(); 
+      return static_cast<unsigned int>(article) <= itr->second.articles.size(); 
     }
   }
+  return false;
 }
 
 //returns a vector of pairs containing <index, name of newsGroup>
@@ -107,11 +108,15 @@ std::vector<std::pair<int, std::string>> DatabaseHNS::listArticles(int& newsGrou
   auto itr2 = itr->second.articles.begin();
   while(itr2 != itr->second.articles.end()){
     articleNames.push_back(make_pair(itr2->first, itr2->second.title));
-    itr++;
+    itr2++;
   }
   return articleNames;
 }
 
-int DatabaseHNS::generateIndex(){
-  return index++;
+int DatabaseHNS::generateNewsGroupIndex(){
+  return newsGroupIndex++;
+}
+
+int DatabaseHNS::generateArticleIndex(){
+  return articleIndex++;
 }

@@ -7,7 +7,7 @@
 
 typedef struct {
   std::string author;
-  std::string title;
+  std::string title; 
   std::string article;
 } Article;
 
@@ -25,6 +25,8 @@ class Database{
     virtual bool deleteArticle(int& newsGroup, int& article) = 0;
     virtual bool createArticle(int& newsGroup, std::string& title, std::string& article, std::string& author) = 0;
     virtual Article getArticle(int& newsGroup, int& index) = 0;
+    virtual bool newsGroupExists(int newsGroup) = 0;
+    virtual bool articleExists(int newsGroup, int article) = 0;
     virtual std::vector<std::pair<int, std::string>> listArticles(int& newsGroup) = 0;
 };
 

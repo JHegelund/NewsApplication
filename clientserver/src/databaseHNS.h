@@ -20,10 +20,12 @@ public:
   Article getArticle(int& newsGroup, int& index);
   std::vector<std::pair<int, std::string>> listArticles(int& newsGroup);
 protected:
-	int generateIndex();
+	int generateNewsGroupIndex();
+  int generateArticleIndex();
 private:
   std::vector<std::pair<int, NewsGroup>> newsGroups;
-	int index = 0;
+	int newsGroupIndex = 0;
+  int articleIndex = 0;
 };
 
 #endif
