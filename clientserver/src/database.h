@@ -24,7 +24,7 @@ class Database{
     virtual std::vector<std::pair<int, std::string>> listNewsGroups() = 0;
     virtual bool deleteArticle(int& newsGroup, int& article) = 0;
     virtual bool createArticle(int& newsGroup, std::string& title, std::string& article, std::string& author) = 0;
-    virtual Article getArticle(int& newsGroup, int& index) const = 0;
+    virtual Article getArticle(unsigned int& newsGroup, unsigned int& index) = 0;
     virtual std::vector<std::pair<int, std::string>> listArticles(int& newsGroup) = 0;
 };
 

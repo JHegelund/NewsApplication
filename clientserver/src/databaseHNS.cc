@@ -27,8 +27,15 @@ std::vector<std::pair<int, std::string>> DatabaseHNS::listNewsGroups(){
 }
 
 bool DatabaseHNS::deleteArticle(int& newsGroup, int& article){
-  newsGroups.at(newsGroup).articles.erase(newsGroups.at(newsGroup).articles.begin() + article);
-  return true;
+  auto it = std::find_if(newsGroups.begin(), newsGroups.end(), [&](std::pair<int, NewsGroup> current) -> bool {
+    return (current.first == newsGroup);
+  });
+  if(it == newsGroups.end()){
+    return false;
+  }else{
+    it->second.articles.erase(it->second.articles.begin() + article);
+    return true;
+  }
 }
 
 bool DatabaseHNS::createArticle(int& newsGroup, std::string& title, std::string& article, std::string& author){
@@ -36,16 +43,34 @@ bool DatabaseHNS::createArticle(int& newsGroup, std::string& title, std::string&
   temp.title = title;
   temp.author = author;
   temp.article = article;
-  newsGroups.at(newsGroup).articles.push_back(temp);
-  return true;
+  auto it = std::find_if(newsGroups.begin(), newsGroups.end(), [&](std::pair<int, NewsGroup> current) -> bool {
+    return (current.first == newsGroup);
+  });
+  if(it == newsGroups.end()){
+    return false;
+  }else{
+    it->second.articles.push_back(temp);
+    return true;
+  }
 }
 
-Article DatabaseHNS::getArticle(int& newsGroup, int& index) const{
-  return newsGroups.at(newsGroup).articles.at(index);
+Article DatabaseHNS::getArticle(unsigned int& newsGroup, unsigned int& index){
+  if(articleExists(newsGroup, index)){
+    return newsGroups.at(newsGroup).articles.at(index);
+  }else{
+    return NULL;
+  }
+
 }
 
 bool DatabaseHNS::newsGroupExists(unsigned int newsGroup){
-  return newsGroup > newsGroups.size();
+  return newsGroup < newsGroups.size();
+}
+
+bool DatabaseHNS::articleExists(unsigned int newsGroup, unsigned int article){
+  if(newsGroupExists(newsGroup)){
+    return article < newsGroups.at(newsGroup).articles.size(); 
+  }
 }
 
 std::vector<std::pair<int, std::string>> DatabaseHNS::listArticles(int& newsGroup){

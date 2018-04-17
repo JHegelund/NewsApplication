@@ -2,6 +2,9 @@
 #define DATABASEHNS_H
 
 #include "database.h"
+#include <functional>
+#include <algorithm>
+
 
 class DatabaseHNS : public Database{
 public:
@@ -11,9 +14,10 @@ public:
   bool createNewsGroup(std::string name);
   std::vector<std::pair<int, std::string>> listNewsGroups();
 	bool newsGroupExists(unsigned int newsGroup);
+  bool articleExists(unsigned int newsGroup, unsigned int article);
   bool deleteArticle(int& newsGroup, int& article);
   bool createArticle(int& newsGroup, std::string& title, std::string& article, std::string& author);
-  Article getArticle(int& newsGroup, int& index) const;
+  Article getArticle(unsigned int& newsGroup, unsigned int& index);
   std::vector<std::pair<int, std::string>> listArticles(int& newsGroup);
 protected:
 	int generateIndex();
