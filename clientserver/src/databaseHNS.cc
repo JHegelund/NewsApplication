@@ -33,11 +33,17 @@ bool DatabaseHNS::deleteArticle(int& newsGroup, int& article){
   if(it == newsGroups.end()){
     return false;
   }else{
-    it->second.articles.erase(it->second.articles.begin() + article);
+    auto it2 = std::find_if(it->second.articles.begin(), it->second.articles.begin(), [&](std::pair<int, Article> current) -> bool{
+      return(current.first == article);
+    });
+    it->second.articles.erase(it2);
     return true;
   }
 }
 
+//Adds article to specified newsGroup
+//Takes in (newsGroup, title, article, author), (int, string, string, string) 
+//returns false if the newsGroup doesn't exist
 bool DatabaseHNS::createArticle(int& newsGroup, std::string& title, std::string& article, std::string& author){
   Article temp = Article();
   temp.title = title;
@@ -49,35 +55,55 @@ bool DatabaseHNS::createArticle(int& newsGroup, std::string& title, std::string&
   if(it == newsGroups.end()){
     return false;
   }else{
-    it->second.articles.push_back(temp);
+    it->second.articles.push_back(make_pair(generateIndex(), temp));
     return true;
   }
 }
 
-Article DatabaseHNS::getArticle(unsigned int& newsGroup, unsigned int& index){
+//returns the specified article in the form of an Article struct
+Article DatabaseHNS::getArticle(int& newsGroup, int& index){
   if(articleExists(newsGroup, index)){
-    return newsGroups.at(newsGroup).articles.at(index);
-  }else{
-    return NULL;
+    auto it = std::find_if(newsGroups.begin(), newsGroups.end(), [&](std::pair<int, NewsGroup> current) -> bool {
+      return (current.first == newsGroup);
+    });
+    auto it2 = std::find_if(it->second.articles.begin(), it->second.articles.begin(), [&](std::pair<int, Article> current) -> bool{
+      return (current.first == index);
+    });
+    return it2->second;
   }
-
 }
 
-bool DatabaseHNS::newsGroupExists(unsigned int newsGroup){
+//returns true if newsGroup index is within bounds of the newsGroups list
+bool DatabaseHNS::newsGroupExists(int newsGroup){
+  if(newsGroup < 0){
+    return false;
+  }
   return newsGroup < newsGroups.size();
 }
 
-bool DatabaseHNS::articleExists(unsigned int newsGroup, unsigned int article){
-  if(newsGroupExists(newsGroup)){
-    return article < newsGroups.at(newsGroup).articles.size(); 
+//returns true if article index is within bounds of the articles list
+bool DatabaseHNS::articleExists(int newsGroup, int article){
+  if(newsGroup < 0 || article < 0){
+    return false;
+  }else if(newsGroupExists(newsGroup)){
+    auto itr = std::find_if(newsGroups.begin(), newsGroups.end(), [&](std::pair<int, NewsGroup> current) -> bool {
+      return (current.first == newsGroup);
+    });
+    if(itr != newsGroups.end()){
+      return article < itr->second.articles.size(); 
+    }
   }
 }
 
+//returns a vector of pairs containing <index, name of newsGroup>
 std::vector<std::pair<int, std::string>> DatabaseHNS::listArticles(int& newsGroup){
-  std::vector<std::string> articleNames;
-  auto itr = newsGroups.at(newsGroup).articles.begin();
-  while(itr != newsGroups.at(newsGroup).articles.end()){
-    articleNames.push_back(itr->title);
+  std::vector<std::pair<int, std::string>> articleNames;
+  auto itr = std::find_if(newsGroups.begin(), newsGroups.end(), [&](std::pair<int, NewsGroup> current) -> bool {
+    return (current.first == newsGroup);
+  });
+  auto itr2 = itr->second.articles.begin();
+  while(itr2 != itr->second.articles.end()){
+    articleNames.push_back(make_pair(itr2->first, itr2->second.title));
     itr++;
   }
   return articleNames;
