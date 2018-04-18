@@ -1,8 +1,6 @@
 #include "databaseHNS.h"
 #include <iostream>
 
-using std::make_pair;
-
 DatabaseHNS::DatabaseHNS() {}
 
 bool DatabaseHNS::deleteNewsGroup(int newsGroup){
@@ -20,7 +18,7 @@ bool DatabaseHNS::createNewsGroup(std::string name){
   NewsGroup temp = NewsGroup();
   temp.name = name;
   int id = generateNewsGroupIndex();
-  newsGroups.push_back(make_pair(id, temp));
+  newsGroups.push_back(std::make_pair(id, temp));
   return true;
 }
 
@@ -28,7 +26,7 @@ std::vector<std::pair<int, std::string>> DatabaseHNS::listNewsGroups(){
   std::vector<std::pair<int, std::string>> newsGroupNames;
 
   for (auto& ng : newsGroups) {
-    newsGroupNames.push_back(make_pair(ng.first, ng.second.name));
+    newsGroupNames.push_back(std::make_pair(ng.first, ng.second.name));
   }
   return newsGroupNames;
 }
@@ -68,7 +66,7 @@ bool DatabaseHNS::createArticle(int& newsGroup, std::string& title, std::string&
   if(it == newsGroups.end())
     return false;
   
-  it->second.articles.push_back(make_pair(generateArticleIndex(), temp));
+  it->second.articles.push_back(std::make_pair(generateArticleIndex(), temp));
   return true;
 }
 
@@ -133,7 +131,7 @@ std::vector<std::pair<int, std::string>> DatabaseHNS::listArticles(int& newsGrou
 
   auto itr2 = itr->second.articles.begin();
   while(itr2 != itr->second.articles.end()){
-    articleNames.push_back(make_pair(itr2->first, itr2->second.title));
+    articleNames.push_back(std::make_pair(itr2->first, itr2->second.title));
     itr2++;
   }
   return articleNames;
