@@ -31,7 +31,7 @@ all: $(PROGS)
 
 # Targets rely on implicit rules for compiling and linking
 # The dependency on libclientserver.a is not defined.
-mainserver: mainserver.o databaseHNS.o
+mainserver: mainserver.o databaseHNS.o messagehandler.o
 #client: client.o
 
 # Phony targets

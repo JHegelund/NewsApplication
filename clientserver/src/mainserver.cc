@@ -1,4 +1,5 @@
 #include "protocol.h"
+#include "messagehandler.h"
 #include "server.h"
 #include "connection.h"
 #include "connectionclosedexception.h"
@@ -8,190 +9,135 @@
 using namespace std;
 
 
-int readNumber(const shared_ptr<Connection>& conn) {
-	unsigned char byte1 = conn->read();
-	unsigned char byte2 = conn->read();
-	unsigned char byte3 = conn->read();
-	unsigned char byte4 = conn->read();
-	return (byte1 << 24) | (byte2 << 16) | (byte3 << 8) | byte4;
-}
-
-string readString(const shared_ptr<Connection>& conn) {
-	if (static_cast<Protocol>(conn->read()) != Protocol::PAR_STRING) {
-		return NULL;
-	}
-	unsigned int length = readNumber(conn);
-	string word(length, ' '); // Init empty string to N length
-	for (unsigned int i = 0; i < length; ++i) {
-		word[i] = conn->read();
-	}
-	return word;
-}
-
-int readNumP(const shared_ptr<Connection>& conn) {
-	if (static_cast<Protocol>(conn->read()) != Protocol::PAR_NUM) {
-		// throw exception
-	}
-	return readNumber(conn);
-}
-
-// Sending a raw number N, i.e. without the PAR_NUM
-void sendNumber(const shared_ptr<Connection>& conn, int number) {
-	unsigned char byte1 = number >> 24;
-	unsigned char byte2 = number >> 16;
-	unsigned char byte3 = number >> 8;
-	unsigned char byte4 = number;
-	conn->write(byte1);
-	conn->write(byte2);
-	conn->write(byte3);
-	conn->write(byte4);
-}
-
-void sendString(const shared_ptr<Connection>& conn, string s) {
-	conn->write(static_cast<unsigned char>(Protocol::PAR_STRING));
-	sendNumber(conn, s.length());
-	for (auto& c : s) {
-		conn->write(c);
-	}
-}
-
-void sendNumP(const shared_ptr<Connection>& conn, int number) {
-	conn->write(static_cast<unsigned char>(Protocol::PAR_NUM));
-	sendNumber(conn, number);
-}
-
-void listNewsGroups(const shared_ptr<Connection>& conn, Database& db) {
-	if (static_cast<Protocol>(conn->read()) != Protocol::COM_END)
+void listNewsGroups(MessageHandler& mh, Database& db) {
+	if (mh.recvCode() != Protocol::COM_END)
 		return; // FAIL
-	conn->write(static_cast<unsigned char>(Protocol::ANS_LIST_NG)); // Send ACK
+	mh.sendCode(Protocol::ANS_LIST_NG); // Send ACK
 	vector<pair<int, string>> newsGroups = db.listNewsGroups();
 
 	// Send num_p of how many Newsgroups there are
-	sendNumP(conn, newsGroups.size());
+	mh.sendIntParameter(newsGroups.size());
 
 	// Send [num_p string_p]* i.e. list of Newsgroups ID and name
 	for (auto& ng : newsGroups) {
-		sendNumP(conn, ng.first);
-		sendString(conn, ng.second);
+		mh.sendIntParameter(ng.first);
+		mh.sendStringParameter(ng.second);
 	}
-	conn->write(static_cast<unsigned char>(Protocol::ANS_END)); // Send ANS_END
+	mh.sendCode(Protocol::ANS_END); // Send ANS_END
 }
 
-void createNewsGroup(const shared_ptr<Connection>& conn, Database& db) {
-	string newsGroupName = readString(conn);
-	if (static_cast<Protocol>(conn->read()) != Protocol::COM_END){
+void createNewsGroup(MessageHandler& mh, Database& db) {
+	string newsGroupName = mh.recvStringParameter();
+	if (mh.recvCode() != Protocol::COM_END){
 		cout << "Fail" << endl;
 		return; // FAIL
 	}
-	conn->write(static_cast<unsigned char>(Protocol::ANS_CREATE_NG));
+	mh.sendCode(Protocol::ANS_CREATE_NG);
 	if(db.createNewsGroup(newsGroupName)) {
 		// Success
-		conn->write(static_cast<unsigned char>(Protocol::ANS_ACK));
+		mh.sendCode(Protocol::ANS_ACK);
 	} else {
 		// Fail
-		conn->write(static_cast<unsigned char>(Protocol::ANS_NAK));
-		conn->write(static_cast<unsigned char>(Protocol::ERR_NG_ALREADY_EXISTS));
+		mh.sendCode(Protocol::ANS_NAK);
+		mh.sendCode(Protocol::ERR_NG_ALREADY_EXISTS);
 	}
-	conn->write(static_cast<unsigned char>(Protocol::ANS_END));
+	mh.sendCode(Protocol::ANS_END);
 }
 
-void deleteNewsGroup(const shared_ptr<Connection>& conn, Database& db) {
-	int newsGroupIndex = readNumP(conn);
-	if (static_cast<Protocol>(conn->read()) != Protocol::COM_END)
+void deleteNewsGroup(MessageHandler& mh, Database& db) {
+	int newsGroupIndex = mh.recvIntParameter();
+	if (mh.recvCode() != Protocol::COM_END)
 		return; // FAIL
 
-	conn->write(static_cast<unsigned char>(Protocol::ANS_DELETE_NG)); // Send ACK
+	mh.sendCode(Protocol::ANS_DELETE_NG); // Send ACK
 	if(db.deleteNewsGroup(newsGroupIndex)) {
-		conn->write(static_cast<unsigned char>(Protocol::ANS_ACK));
+		mh.sendCode(Protocol::ANS_ACK);
 	} else {
-		conn->write(static_cast<unsigned char>(Protocol::ANS_NAK));
-		conn->write(static_cast<unsigned char>(Protocol::ERR_NG_DOES_NOT_EXIST));
+		mh.sendCode(Protocol::ANS_NAK);
+		mh.sendCode(Protocol::ERR_NG_DOES_NOT_EXIST);
 	}
-	conn->write(static_cast<unsigned char>(Protocol::ANS_END));
+	mh.sendCode(Protocol::ANS_END);
 }
 
-void listArticles(const shared_ptr<Connection>& conn, Database& db) {
-	int newsGroupIndex = readNumP(conn);
-	if (static_cast<Protocol>(conn->read()) != Protocol::COM_END)
+void listArticles(MessageHandler& mh, Database& db) {
+	int newsGroupIndex = mh.recvIntParameter();
+	if (mh.recvCode() != Protocol::COM_END)
 		return; // FAIL
 	
-	conn->write(static_cast<unsigned char>(Protocol::ANS_LIST_ART));
+	mh.sendCode(Protocol::ANS_LIST_ART);
 	try {
 		vector<pair<int, string>> articles = db.listArticles(newsGroupIndex);
 		
-		conn->write(static_cast<unsigned char>(Protocol::ANS_ACK));
-		sendNumP(conn, articles.size());
+		mh.sendCode(Protocol::ANS_ACK);
+		mh.sendIntParameter(articles.size());
 		for (auto& art : articles) {
-			sendNumP(conn, art.first);
-			sendString(conn, art.second);
+			mh.sendIntParameter(art.first);
+			mh.sendStringParameter(art.second);
 		}
 	} catch (const char* errorMessage) {
-		conn->write(static_cast<unsigned char>(Protocol::ANS_NAK));
-		conn->write(static_cast<unsigned char>(Protocol::ERR_NG_DOES_NOT_EXIST));
+		mh.sendCode(Protocol::ANS_NAK);
+		mh.sendCode(Protocol::ERR_NG_DOES_NOT_EXIST);
 		std::cerr << errorMessage << std::endl;
 	}
-	conn->write(static_cast<unsigned char>(Protocol::ANS_END));
+	mh.sendCode(Protocol::ANS_END);
 }
 
-void createArticle(const shared_ptr<Connection>& conn, Database& db) {
-	int newsGroupIndex = readNumP(conn);
-	string title = readString(conn);
-	string author = readString(conn);
-	string text = readString(conn);
-	if (static_cast<Protocol>(conn->read()) != Protocol::COM_END)
+void createArticle(MessageHandler& mh, Database& db) {
+	int newsGroupIndex = mh.recvIntParameter();
+	string title = mh.recvStringParameter();
+	string author = mh.recvStringParameter();
+	string text = mh.recvStringParameter();
+	if (mh.recvCode() != Protocol::COM_END)
 		return; // FAIL
 
-	conn->write(static_cast<unsigned char>(Protocol::ANS_CREATE_ART));
+	mh.sendCode(Protocol::ANS_CREATE_ART);
 	if(db.createArticle(newsGroupIndex, title, author, text)) {
-		conn->write(static_cast<unsigned char>(Protocol::ANS_ACK));
+		mh.sendCode(Protocol::ANS_ACK);
 	} else {
-		conn->write(static_cast<unsigned char>(Protocol::ANS_NAK));
-		conn->write(static_cast<unsigned char>(Protocol::ERR_NG_DOES_NOT_EXIST));
+		mh.sendCode(Protocol::ANS_NAK);
+		mh.sendCode(Protocol::ERR_NG_DOES_NOT_EXIST);
 	}
-	conn->write(static_cast<unsigned char>(Protocol::ANS_END));
+	mh.sendCode(Protocol::ANS_END);
 }
 
-void deleteArticle(const shared_ptr<Connection>& conn, Database& db) {
-	int newsGroupIndex = readNumP(conn);
-	int articleIndex = readNumP(conn);
-	if (static_cast<Protocol>(conn->read()) != Protocol::COM_END)
+void deleteArticle(MessageHandler& mh, Database& db) {
+	int newsGroupIndex = mh.recvIntParameter();
+	int articleIndex = mh.recvIntParameter();
+	if (mh.recvCode() != Protocol::COM_END)
 		return; // FAIL
 
-	conn->write(static_cast<unsigned char>(Protocol::ANS_DELETE_ART));
+	mh.sendCode(Protocol::ANS_DELETE_ART);
 	if(db.deleteArticle(newsGroupIndex, articleIndex)) {
-		conn->write(static_cast<unsigned char>(Protocol::ANS_ACK));
+		mh.sendCode(Protocol::ANS_ACK);
 	} else {
-		conn->write(static_cast<unsigned char>(Protocol::ANS_NAK));
+		mh.sendCode(Protocol::ANS_NAK);
 	}
-	conn->write(static_cast<unsigned char>(Protocol::ANS_END));
+	mh.sendCode(Protocol::ANS_END);
 }
 
-void getArticle(const shared_ptr<Connection>& conn, Database& db) {
-	int newsGroupIndex = readNumP(conn);
-	int articleIndex = readNumP(conn);
-	if (static_cast<Protocol>(conn->read()) != Protocol::COM_END)
+void getArticle(MessageHandler& mh, Database& db) {
+	int newsGroupIndex = mh.recvIntParameter();
+	int articleIndex = mh.recvIntParameter();
+	if (mh.recvCode() != Protocol::COM_END)
 		return; // FAIL
-
-	conn->write(static_cast<unsigned char>(Protocol::ANS_GET_ART));
-	// Fetch, handle and send article
+ 
+	mh.sendCode(Protocol::ANS_GET_ART);
 	if (db.newsGroupExists(newsGroupIndex)) {
 		if (db.articleExists(newsGroupIndex, articleIndex)) {
-			conn->write(static_cast<unsigned char>(Protocol::ANS_ACK));
+			mh.sendCode(Protocol::ANS_ACK);
 			Article art = db.getArticle(newsGroupIndex, articleIndex);
-			cout << ":" << art.title << ":" << std::endl;
-			sendString(conn, art.title);
-			cout << "title sent" << std::endl;
-			sendString(conn, art.author);
-			sendString(conn, art.article);
+			mh.sendStringParameter(art.title);
+			mh.sendStringParameter(art.author);
+			mh.sendStringParameter(art.article);
 		} else {
-			conn->write(static_cast<unsigned char>(Protocol::ANS_NAK));
-			conn->write(static_cast<unsigned char>(Protocol::ERR_NG_DOES_NOT_EXIST));
+			mh.sendCode(Protocol::ANS_NAK);
+			mh.sendCode(Protocol::ERR_NG_DOES_NOT_EXIST);
 		}
 	} else {
-		conn->write(static_cast<unsigned char>(Protocol::ANS_NAK));
-		conn->write(static_cast<unsigned char>(Protocol::ERR_NG_DOES_NOT_EXIST));
+		mh.sendCode(Protocol::ANS_NAK);
+		mh.sendCode(Protocol::ERR_NG_DOES_NOT_EXIST);
 	}
-	conn->write(static_cast<unsigned char>(Protocol::ANS_END));
+	mh.sendCode(Protocol::ANS_END);
 
 }
 
@@ -223,23 +169,25 @@ int main(int argc, char* argv[]){
 		if (conn != nullptr) {
 			try {
 				// Read commandbyte
-				p = static_cast<Protocol>(conn->read());
+				MessageHandler mh(conn);
+				p = mh.recvCode();
 				switch(p) {
 					case Protocol::COM_LIST_NG:
-						listNewsGroups(conn, db); break;
+						listNewsGroups(mh, db); break;
 					case Protocol::COM_CREATE_NG:
-						createNewsGroup(conn, db); break;
+						createNewsGroup(mh, db); break;
 					case Protocol::COM_DELETE_NG:
-						deleteNewsGroup(conn, db); break;
+						deleteNewsGroup(mh, db); break;
 					case Protocol::COM_LIST_ART:
-						listArticles(conn, db); break;
+						listArticles(mh, db); break;
 					case Protocol::COM_CREATE_ART:
-						createArticle(conn, db); break;
+						createArticle(mh, db); break;
 					case Protocol::COM_DELETE_ART:
-						deleteArticle(conn, db); break;
+						deleteArticle(mh, db); break;
 					case Protocol::COM_GET_ART:
-						getArticle(conn, db); break;
-					default: break; // Throw protocolexception
+						getArticle(mh, db); break;
+					default: 
+						throw "Protcolexception!"; break;
 				}
 			} catch (ConnectionClosedException&) {
 				server.deregisterConnection(conn);

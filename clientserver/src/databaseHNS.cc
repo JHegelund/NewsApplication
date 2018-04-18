@@ -98,7 +98,6 @@ bool DatabaseHNS::articleExists(int newsGroup, int article){
 
 //returns a vector of pairs containing <index, name of newsGroup>
 std::vector<std::pair<int, std::string>> DatabaseHNS::listArticles(int& newsGroup){
-  std::cout << newsGroup << std::endl;
   if (!newsGroupExists(newsGroup))
     throw "NewsGroup doesn't exist!";
   std::vector<std::pair<int, std::string>> articleNames;

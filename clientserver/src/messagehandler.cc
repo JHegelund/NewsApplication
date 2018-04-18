@@ -19,9 +19,7 @@ using namespace std;
  * Create a message handler.
  * @param conn The connection to use messages
 */
-MessageHandler::MessageHandler(const Connection& conn) {
-		
-}
+MessageHandler::MessageHandler(const shared_ptr<Connection>& conn): conn(conn) {}
 
 /**
  * Set the log window to use.
@@ -36,8 +34,8 @@ MessageHandler::MessageHandler(const Connection& conn) {
  * @param code, The code to transmit.
  * @throws ConnectionClosedException, If the server died
  */
-void MessageHandler::sendCode(const Connection& conn, const size_t code){
-	sendByte(conn, code);
+void MessageHandler::sendCode(const Protocol code){
+	conn->write(static_cast<unsigned char>(code)); //Static cast?
 }
 
 /**
@@ -45,15 +43,11 @@ void MessageHandler::sendCode(const Connection& conn, const size_t code){
  * @param value, The value to transmit
  * @throws ConnectionClosedException, If the server died
  */
-void MessageHandler::sendInt(const Connection& conn, int value){
-	sendByte(conn, (value >> 24) & 0xFF);
-	//logWindow.logByte((value >> 24) & 0xFF);
-	sendByte(conn, (value >> 16) & 0xFF);
-	//logWindow.logByte((value >> 16) & 0xFF);
-	sendByte(conn, (value >> 8) & 0xFF);
-	//logWindow.logByte((value >> 8) & 0xFF);
-	sendByte(conn, value & 0xFF);
-	//logWindow.logByte(value & 0xFF);
+void MessageHandler::sendInt(int value){
+	conn->write((value >> 24) & 0xFF);
+	conn->write((value >> 16) & 0xFF);
+	conn->write((value >> 8) & 0xFF);
+	conn->write(value & 0xFF);
 }
 
 /**
@@ -61,9 +55,9 @@ void MessageHandler::sendInt(const Connection& conn, int value){
  * @param value, The parameter to transmit
  * @throws ConnectionClosedException, If the server died
  */
-void MessageHandler::sendIntParameter(const Connection& conn, int param){
-	sendCode(conn, Protocol::PAR_NUM);
-	sendInt(conn, param);
+void MessageHandler::sendIntParameter(int param){
+	sendCode(Protocol::PAR_NUM);
+	sendInt(param);
 }
 
 /**
@@ -71,12 +65,11 @@ void MessageHandler::sendIntParameter(const Connection& conn, int param){
  * @param value, The parameter to transmit
  * @throws ConnectionClosedException, If the server died
  */
-void MessageHandler::sendStringParameter(const Connection& conn, string param){
-	sendCode(conn, Protocol::PAR_STRING);
-	sendInt(conn, param.length());
-	for (int i = 0; i < param.length(); i++) {
-		sendByte(conn, param.charAt(i));
-		//logWindow.logChar(param.charAt(i));
+void MessageHandler::sendStringParameter(string param){
+	sendCode(Protocol::PAR_STRING);
+	sendInt(param.length());
+	for (auto& c : param) {
+		conn->write(c);
 	}
 }
 
@@ -87,10 +80,8 @@ void MessageHandler::sendStringParameter(const Connection& conn, string param){
  * @return The code
  * @throws ConnectionClosedException, If the server died
  */
-int MessageHandler::recvCode(const Connection& conn){
-	int code = recvByte(conn);
-	//logWindow.logCode(code);
-	return code;
+Protocol MessageHandler::recvCode() const{
+	return static_cast<Protocol>(conn->read());
 }
 
 /**
@@ -98,60 +89,44 @@ int MessageHandler::recvCode(const Connection& conn){
  * @return The int value
  * @throws ConnectionClosedException, If the server died
  */
-int MessageHandler::recvInt(const Connection& conn){
-	int b1 = recvByte(conn);
-	//logWindow.logByte(b1);
-	int b2 = recvByte(conn);
-	//logWindow.logByte(b2);
-	int b3 = recvByte(conn);
-	//logWindow.logByte(b3);
-	int b4 = recvByte(conn);
-	//logWindow.logByte(b4);
-	return b1 << 24 | b2 << 16 | b3 << 8 | b4;
+int MessageHandler::recvInt() const{
+	unsigned char byte1 = conn->read();
+	unsigned char byte2 = conn->read();
+	unsigned char byte3 = conn->read();
+	unsigned char byte4 = conn->read();
+	return (byte1 << 24) | (byte2 << 16) | (byte3 << 8) | byte4;
 }
+
 
 /**
  * Receive an int parameter from the server.
- * 
  * @return The parameter value
- * @throws ConnectionClosedException
- *             If the server died
+ * @throws ConnectionClosedException, If the server died
  */
-int MessageHandler::recvIntParameter(const Connection& conn){
-	int code = recvCode(conn);
-	if (code != Protocol::PAR_NUM) {
-		cout << "Protocol Violation, Receive numeric parameter" << endl;
+int MessageHandler::recvIntParameter() const{
+	if (recvCode() != Protocol::PAR_NUM) {
+		// throw exception
 	}
-	return recvInt(conn);
+	return recvInt();
 }
 
 /**
  * Receive a string parameter from the server.
- * 
  * @return The parameter value
- * @throws ConnectionClosedException
- *             If the server died
+ * @throws ConnectionClosedException, If the server died
  */
-string MessageHandler::recvStringParameter(const Connection& conn){
-	int code = recvCode(conn);
-	if (code != Protocol::PAR_STRING) {
-		cout << "Protocol Violation, Receive string parameter" << endl;
+string MessageHandler::recvStringParameter() const{
+	if (recvCode() != Protocol::PAR_STRING) {
+		return NULL;
 	}
-	int n = recvInt(conn);
-	if (n < 0) {
-		cout << "Receive string parameter, Number of characters < 0" << endl;
+	unsigned int length = recvInt();
+	string word(length, ' '); // Init empty string to N length
+	for (unsigned int i = 0; i < length; ++i) {
+		word[i] = conn->read();
 	}
-	//Write stringbuffer for C++
-
-	/*StringBuffer result = new StringBuffer(n);
-	for (int i = 1; i <= n; i++) {
-		char ch = (char) conn.read();
-		result.append(ch);
-		logWindow.logChar(ch);
-	}*/
-	return result.toString();
+	return word;
 }
-
+/*
 void MessageHandler::sendByte(const Connection& conn, int code){
 	try {
 		conn.write(code);
@@ -170,3 +145,4 @@ int MessageHandler::recvByte(const Connection& conn){
 	}
 	return code;
 }
+*/

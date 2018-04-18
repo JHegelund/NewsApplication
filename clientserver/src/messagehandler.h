@@ -7,38 +7,29 @@
 #define MESSAGEHANDLER_H
 
 #include <string>
+#include <memory>
 #include "connection.h"
+#include "protocol.h"
 
  using namespace std;
 
 class MessageHandler {
 public:
-
-	MessageHandler(const Connection& conn);
-
-	/**
-	 * Set the log window to use.
-	 * 
-	 * @param logWindow
-	 *            The log window
-	 */
+	MessageHandler(const std::shared_ptr<Connection>& conn);
 	//void setLogWindow(Logger logWindow);
-
-	static void sendCode(const Connection& conn, const size_t code);
-	static void sendInt(const Connection& conn, int value);
-	static void sendIntParameter(const Connection& conn, int param);
-	static void sendStringParameter(const Connection& conn, string param);
-	static int recvCode(const Connection& conn);
-	static int recvInt(const Connection& conn);
-	static int recvIntParameter(const Connection& conn);
-	static string recvStringParameter(const Connection& conn);		
-
+	void sendCode(const Protocol code);
+	void sendInt(int value);
+	void sendIntParameter(int param);
+	void sendStringParameter(string param);
+	Protocol recvCode() const;
+	int recvInt() const;
+	int recvIntParameter() const;
+	string recvStringParameter() const;		
 private:
-	//Connection conn; // the connection
+	const std::shared_ptr<Connection>& conn; // the connection
 	//Logger logWindow; // the log window
-
-	static void sendByte(const Connection& conn, int code);
-	static int recvByte(const Connection& conn);
+	//void sendByte(const Connection& conn, int code);
+	//int recvByte(const Connection& conn);
 
 	
 };
