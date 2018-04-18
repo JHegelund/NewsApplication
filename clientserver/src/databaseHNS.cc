@@ -7,6 +7,7 @@ bool DatabaseHNS::deleteNewsGroup(int newsGroup){
   auto it = std::find_if(newsGroups.begin(), newsGroups.end(), [&](std::pair<int, NewsGroup> current) -> bool {
     return (current.first == newsGroup);
   });
+  //bör ev. läggas in en spärr så att man endastkan ta bort tomma newsGroups
   if(it != newsGroups.end()){
     newsGroups.erase(it);
     return true;
@@ -17,8 +18,11 @@ bool DatabaseHNS::deleteNewsGroup(int newsGroup){
 bool DatabaseHNS::createNewsGroup(std::string name){
   NewsGroup temp = NewsGroup();
   temp.name = name;
+  temp.articles = std::vector<std::pair<int, Article>>();
+
   int id = generateNewsGroupIndex();
   newsGroups.push_back(std::make_pair(id, temp));
+  
   return true;
 }
 
