@@ -17,9 +17,7 @@ using namespace std;
 	
 /**
  * Create a message handler.
- * 
- * @param conn
- *            The connection to use messages
+ * @param conn The connection to use messages
 */
 MessageHandler::MessageHandler(const Connection& conn) {
 		
@@ -27,9 +25,7 @@ MessageHandler::MessageHandler(const Connection& conn) {
 
 /**
  * Set the log window to use.
- * 
- * @param logWindow
- *            The log window
+ * @param logWindow The log window
  */
 /*public void setLogWindow(Logger logWindow) {
 	this.logWindow = logWindow;
@@ -37,11 +33,8 @@ MessageHandler::MessageHandler(const Connection& conn) {
 
 /**
  * Transmit a code (a constant from the Protocol class).
- * 
- * @param code
- *            The code to transmit.
- * @throws ConnectionClosedException
- *             If the server died
+ * @param code, The code to transmit.
+ * @throws ConnectionClosedException, If the server died
  */
 void MessageHandler::sendCode(const Connection& conn, const size_t code){
 	sendByte(conn, code);
@@ -49,11 +42,8 @@ void MessageHandler::sendCode(const Connection& conn, const size_t code){
 
 /**
  * Transmit an int value, according to the protocol.
- * 
- * @param value
- *            The value to transmit
- * @throws ConnectionClosedException
- *             If the server died
+ * @param value, The value to transmit
+ * @throws ConnectionClosedException, If the server died
  */
 void MessageHandler::sendInt(const Connection& conn, int value){
 	sendByte(conn, (value >> 24) & 0xFF);
@@ -68,11 +58,8 @@ void MessageHandler::sendInt(const Connection& conn, int value){
 
 /**
  * Transmit an int parameter, according to the protocol.
- * 
- * @param value
- *            The parameter to transmit
- * @throws ConnectionClosedException
- *             If the server died
+ * @param value, The parameter to transmit
+ * @throws ConnectionClosedException, If the server died
  */
 void MessageHandler::sendIntParameter(const Connection& conn, int param){
 	sendCode(conn, Protocol::PAR_NUM);
@@ -81,11 +68,8 @@ void MessageHandler::sendIntParameter(const Connection& conn, int param){
 
 /**
  * Transmit a string parameter, according to the protocol.
- * 
- * @param value
- *            The parameter to transmit
- * @throws ConnectionClosedException
- *             If the server died
+ * @param value, The parameter to transmit
+ * @throws ConnectionClosedException, If the server died
  */
 void MessageHandler::sendStringParameter(const Connection& conn, string param){
 	sendCode(conn, Protocol::PAR_STRING);
@@ -100,10 +84,8 @@ void MessageHandler::sendStringParameter(const Connection& conn, string param){
 
 /**
  * Receive a command code or an error code from the server.
- * 
  * @return The code
- * @throws ConnectionClosedException
- *             If the server died
+ * @throws ConnectionClosedException, If the server died
  */
 int MessageHandler::recvCode(const Connection& conn){
 	int code = recvByte(conn);
@@ -113,10 +95,8 @@ int MessageHandler::recvCode(const Connection& conn){
 
 /**
  * Receive an int value from the server.
- * 
  * @return The int value
- * @throws ConnectionClosedException
- *             If the server died
+ * @throws ConnectionClosedException, If the server died
  */
 int MessageHandler::recvInt(const Connection& conn){
 	int b1 = recvByte(conn);
@@ -127,7 +107,6 @@ int MessageHandler::recvInt(const Connection& conn){
 	//logWindow.logByte(b3);
 	int b4 = recvByte(conn);
 	//logWindow.logByte(b4);
-
 	return b1 << 24 | b2 << 16 | b3 << 8 | b4;
 }
 
