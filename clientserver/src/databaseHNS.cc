@@ -45,7 +45,7 @@ bool DatabaseHNS::deleteArticle(int& newsGroup, int& article){
       return(current.first == article);
     });
 
-    if(it2 != it->second.articles.begin()){
+    if(it2 != it->second.articles.end()){
       it->second.articles.erase(it2);
       return true;
     }
