@@ -24,7 +24,7 @@ LDFLAGS   = -g -L..
 LDLIBS = -lclientserver
 
 # Targets
-PROGS = mainserver
+PROGS = mainserver client messagehandler
 #PROGS = client
 
 all: $(PROGS)
@@ -32,7 +32,7 @@ all: $(PROGS)
 # Targets rely on implicit rules for compiling and linking
 # The dependency on libclientserver.a is not defined.
 mainserver: mainserver.o databaseHNS.o messagehandler.o
-#client: client.o
+client: client.o messagehandler.o
 
 # Phony targets
 .PHONY: all clean distclean
