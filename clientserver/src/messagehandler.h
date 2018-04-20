@@ -15,7 +15,7 @@
 
 class MessageHandler {
 public:
-	MessageHandler(const std::shared_ptr<Connection>& conn);
+	MessageHandler(const Connection* conn);
 	//void setLogWindow(Logger logWindow);
 	void sendCode(const Protocol code);
 	void sendInt(int value);
@@ -26,7 +26,7 @@ public:
 	int recvIntParameter() const;
 	string recvStringParameter() const;		
 private:
-	const std::shared_ptr<Connection>& conn; // the connection
+	const Connection* conn; // the connection
 	//Logger logWindow; // the log window
 	//void sendByte(const Connection& conn, int code);
 	//int recvByte(const Connection& conn);

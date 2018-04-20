@@ -19,7 +19,7 @@ using namespace std;
  * Create a message handler.
  * @param conn The connection to use messages
 */
-MessageHandler::MessageHandler(const shared_ptr<Connection>& conn): conn(conn) {}
+MessageHandler::MessageHandler(const Connection* conn): conn(conn) {}
 
 /**
  * Set the log window to use.

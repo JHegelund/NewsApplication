@@ -169,7 +169,7 @@ int main(int argc, char* argv[]){
 		if (conn != nullptr) {
 			try {
 				// Read commandbyte
-				MessageHandler mh(conn);
+				MessageHandler mh(conn.get());
 				p = mh.recvCode();
 				switch(p) {
 					case Protocol::COM_LIST_NG:
