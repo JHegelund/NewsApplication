@@ -65,7 +65,7 @@ void listArticles(MessageHandler& mh, int ngID){
 				string name = mh.recvStringParameter();
 				arts.push_back(make_pair(id, name));
 			}
-		} else if(ans == static_cast<int>(Protocol::ANS_NAK)){
+		} else if(ans == Protocol::ANS_NAK){
 			if(mh.recvCode() == Protocol::ERR_NG_DOES_NOT_EXIST){
 				cout << "Error newsgroup does not exist" << endl;
 			}
