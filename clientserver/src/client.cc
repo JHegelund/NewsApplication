@@ -43,7 +43,7 @@ void listNG(MessageHandler& mh){
 		cout << "Protocol Violation" << endl;
 	} else {
 		for(pair<int, string>& ng : ngs){
-			cout << ng.first << " " << ng.second << endl;
+			cout << "ID: " << ng.first << " Newsgroup: " << ng.second << endl;
 		}
 	}
 }
@@ -76,7 +76,7 @@ void listArticles(MessageHandler& mh, int ngID){
 			cout << "Protocol Violation" << endl;
 		} else {
 			for(pair<int, string>& a : arts){
-				cout << a.first << " " << a.second << endl;
+				cout << "ID: " << a.first << " Article: " << a.second << endl;
 			}
 		}
 	}
@@ -207,7 +207,7 @@ void readArt(MessageHandler& mh, int ngID, int artID){
 }
 
 void createArt(MessageHandler& mh, int ngID, string title, string author, string text){
-	mh.sendCode(Protocol::COM_GET_ART);
+	mh.sendCode(Protocol::COM_CREATE_ART);
 	mh.sendIntParameter(ngID);
 	mh.sendStringParameter(title);
 	mh.sendStringParameter(author);
@@ -299,7 +299,6 @@ int main(int argc, char* argv[]) {
 			if(cmd == "List"){
 				cin >> cmd;
 				if(cmd == "newsgroups"){
-					cout << "Listing newgroups...." << endl;
 					listNG(mh);
 				} else if(cmd == "articles"){
 					//Read newsgroup id
@@ -349,6 +348,7 @@ int main(int argc, char* argv[]) {
 			} else if(cmd == "Write"){
 				cout << "Enter the newgroup ID for the newsgroup where you want to place the article" << endl;
 				cin >> cmd;
+				cin.ignore();
 				int ngID = readNgId(cmd);
 				if(ngID != -1){
 					cout << "Enter the title" << endl;

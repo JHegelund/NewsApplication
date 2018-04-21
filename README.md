@@ -25,5 +25,5 @@ Ses nästa gång: torsdag 11/4 kl 14:00
 
 * Interface:
 * To HNS at first
-* To map-structure and .txt files after
+* To .txt files after
 ------------------------------------

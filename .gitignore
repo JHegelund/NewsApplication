@@ -34,3 +34,5 @@ bin
 
 mainserver
 client
+
+database/
