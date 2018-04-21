@@ -4,6 +4,7 @@
 #include "connection.h"
 #include "connectionclosedexception.h"
 #include "databaseHNS.h"
+#include "databaseDisk.h"
 #include <iostream>
 
 using namespace std;
@@ -144,8 +145,8 @@ void getArticle(MessageHandler& mh, Database& db) {
 
 
 int main(int argc, char* argv[]){
-	if (argc != 2) {
-		cerr << "Usage: myserver port-number" << endl;
+	if (argc != 2 && argc != 3) {
+		cerr << "Usage: myserver port-number [database path]" << endl;
 		exit(1);
 	}
 
@@ -162,7 +163,9 @@ int main(int argc, char* argv[]){
 		cerr << "Server initialization error." << endl;
 		exit(1);
 	}
-	DatabaseHNS db = DatabaseHNS();
+	DatabaseDisk db;
+
+
 
 	while (true) {
 		auto conn = server.waitForActivity();
