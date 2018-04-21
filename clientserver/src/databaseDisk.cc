@@ -71,7 +71,7 @@ bool DatabaseDisk::deleteNewsGroup(int newsGroup){
 	}
 
 	//remove the newsGroup-metadata
-	std::string s = std::to_string(newsGroup);
+	std::string s = "database/" + std::to_string(newsGroup) + "-metadata.txt";
 	std::remove(s.c_str());
 
 	s = std::to_string(newsGroup);
