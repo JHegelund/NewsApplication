@@ -22,12 +22,12 @@ class Database{
     virtual bool deleteNewsGroup(int index) = 0;
     virtual bool createNewsGroup(std::string name) = 0;
     virtual std::vector<std::pair<int, std::string>> listNewsGroups() = 0;
-    virtual bool deleteArticle(int& newsGroup, int& article) = 0;
-    virtual bool createArticle(int& newsGroup, std::string& title, std::string& article, std::string& author) = 0;
-    virtual Article getArticle(int& newsGroup, int& index) = 0;
+    virtual bool deleteArticle(int newsGroup, int article) = 0;
+    virtual bool createArticle(int newsGroup, std::string& title, std::string& article, std::string& author) = 0;
+    virtual Article getArticle(int newsGroup, int index) = 0;
     virtual bool newsGroupExists(int newsGroup) = 0;
     virtual bool articleExists(int newsGroup, int article) = 0;
-    virtual std::vector<std::pair<int, std::string>> listArticles(int& newsGroup) = 0;
+    virtual std::vector<std::pair<int, std::string>> listArticles(int newsGroup) = 0;
 };
 
 #endif

@@ -15,10 +15,10 @@ public:
   std::vector<std::pair<int, std::string>> listNewsGroups();
 	bool newsGroupExists(int newsGroup);
   bool articleExists(int newsGroup, int article);
-  bool deleteArticle(int& newsGroup, int& article);
-  bool createArticle(int& newsGroup, std::string& title, std::string& article, std::string& author);
-  Article getArticle(int& newsGroup, int& index);
-  std::vector<std::pair<int, std::string>> listArticles(int& newsGroup);
+  bool deleteArticle(int newsGroup, int article);
+  bool createArticle(int newsGroup, std::string& title, std::string& article, std::string& author);
+  Article getArticle(int newsGroup, int index);
+  std::vector<std::pair<int, std::string>> listArticles(int newsGroup);
 protected:
 	int generateNewsGroupIndex();
   int generateArticleIndex();

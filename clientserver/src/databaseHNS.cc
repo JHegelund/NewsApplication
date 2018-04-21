@@ -35,7 +35,7 @@ std::vector<std::pair<int, std::string>> DatabaseHNS::listNewsGroups(){
   return newsGroupNames;
 }
 
-bool DatabaseHNS::deleteArticle(int& newsGroup, int& article){
+bool DatabaseHNS::deleteArticle(int newsGroup, int article){
   auto it = std::find_if(newsGroups.begin(), newsGroups.end(), [&](std::pair<int, NewsGroup> current) -> bool {
     return (current.first == newsGroup);
   });
@@ -57,7 +57,7 @@ bool DatabaseHNS::deleteArticle(int& newsGroup, int& article){
 //Adds article to specified newsGroup
 //Takes in (newsGroup, title, article, author), (int, string, string, string) 
 //returns false if the newsGroup doesn't exist
-bool DatabaseHNS::createArticle(int& newsGroup, std::string& title, std::string& author, std::string& article){
+bool DatabaseHNS::createArticle(int newsGroup, std::string& title, std::string& author, std::string& article){
   Article temp = Article();
   temp.title = title;
   temp.author = author;
@@ -75,7 +75,7 @@ bool DatabaseHNS::createArticle(int& newsGroup, std::string& title, std::string&
 }
 
 //returns the specified article in the form of an Article struct
-Article DatabaseHNS::getArticle(int& newsGroup, int& index){
+Article DatabaseHNS::getArticle(int newsGroup, int index){
   if(articleExists(newsGroup, index)){
     auto it = std::find_if(newsGroups.begin(), newsGroups.end(), [&](std::pair<int, NewsGroup> current) -> bool {
       return (current.first == newsGroup);
@@ -124,7 +124,7 @@ bool DatabaseHNS::articleExists(int newsGroup, int article){
 }
 
 //returns a vector of pairs containing <index, name of newsGroup>
-std::vector<std::pair<int, std::string>> DatabaseHNS::listArticles(int& newsGroup){
+std::vector<std::pair<int, std::string>> DatabaseHNS::listArticles(int newsGroup){
   if (!newsGroupExists(newsGroup))
     throw "NewsGroup doesn't exist!";
 
