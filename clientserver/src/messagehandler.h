@@ -7,6 +7,7 @@
 #define MESSAGEHANDLER_H
 
 #include <string>
+#include <fstream>
 #include <memory>
 #include "connection.h"
 #include "protocol.h"
@@ -24,13 +25,14 @@ public:
 	Protocol recvCode() const;
 	int recvInt() const;
 	int recvIntParameter() const;
-	string recvStringParameter() const;		
+	string recvStringParameter() const;
 private:
 	const Connection* conn; // the connection
+  ofstream log;
 	//Logger logWindow; // the log window
 	//void sendByte(const Connection& conn, int code);
 	//int recvByte(const Connection& conn);
 
-	
+
 };
 #endif

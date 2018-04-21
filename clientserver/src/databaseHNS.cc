@@ -17,10 +17,10 @@ bool DatabaseHNS::deleteNewsGroup(int newsGroup){
 
 bool DatabaseHNS::createNewsGroup(std::string name){
   auto it = std::find_if(newsGroups.begin(), newsGroups.end(), [&](std::pair<int, NewsGroup> current) -> bool {
-    return (current.second.name == newsGroup);
+    return (current.second.name == name);
   });
 
-  if(it == newsGroups.end())
+  if(it != newsGroups.end())
     return false;
 
   NewsGroup temp = NewsGroup();
@@ -29,7 +29,7 @@ bool DatabaseHNS::createNewsGroup(std::string name){
 
   int id = generateNewsGroupIndex();
   newsGroups.push_back(std::make_pair(id, temp));
-  
+
   return true;
 }
 
@@ -62,7 +62,7 @@ bool DatabaseHNS::deleteArticle(int newsGroup, int article){
 }
 
 //Adds article to specified newsGroup
-//Takes in (newsGroup, title, article, author), (int, string, string, string) 
+//Takes in (newsGroup, title, article, author), (int, string, string, string)
 //returns false if the newsGroup doesn't exist
 bool DatabaseHNS::createArticle(int newsGroup, std::string& title, std::string& author, std::string& article){
   Article temp = Article();
@@ -76,7 +76,7 @@ bool DatabaseHNS::createArticle(int newsGroup, std::string& title, std::string& 
 
   if(it == newsGroups.end())
     return false;
-  
+
   it->second.articles.push_back(std::make_pair(generateArticleIndex(), temp));
   return true;
 }
@@ -123,10 +123,10 @@ bool DatabaseHNS::articleExists(int newsGroup, int article){
 
     if(it2 != itr->second.articles.end())
       return true;
-   
-   // return static_cast<unsigned int>(article) <= itr->second.articles.size(); 
+
+   // return static_cast<unsigned int>(article) <= itr->second.articles.size();
   }
-  
+
   return false;
 }
 

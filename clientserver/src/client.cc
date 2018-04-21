@@ -94,7 +94,7 @@ void createNG(MessageHandler& mh, string name){
 		Protocol ans = mh.recvCode();
 		if(ans == Protocol::ANS_ACK){
 			if(mh.recvCode() == Protocol::ANS_END){
-				cout << "Article added" << endl;
+				cout << "Newsgroup added" << endl;
 			} else {
 				cout << "Protocol Violation" << endl;
 			}
@@ -313,8 +313,9 @@ int main(int argc, char* argv[]) {
 			} else if (cmd == "Create"){
 				cin >> cmd;
 				if(cmd == "newsgroup"){
-					cin >> cmd;
-					createNG(mh, cmd);
+					string ngname;
+					getline(cin, ngname);
+					createNG(mh, ngname);
 				}
 			} else if(cmd == "Delete"){
 				cin >> cmd;
@@ -351,7 +352,7 @@ int main(int argc, char* argv[]) {
 				int ngID = readNgId(cmd);
 				if(ngID != 0){
 					cout << "Enter the title" << endl;
-					cin.ignore(numeric_limits<streamsize>::max(), '\n');
+					//cin.ignore(numeric_limits<streamsize>::max(), '\n');
 					string title;
 					getline(cin, title);
 					cout << "Enter the author" << endl;

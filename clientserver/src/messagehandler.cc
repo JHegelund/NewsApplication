@@ -14,20 +14,15 @@
 #include <cstdlib>
 
 using namespace std;
-	
+
 /**
  * Create a message handler.
  * @param conn The connection to use messages
 */
-MessageHandler::MessageHandler(const Connection* conn): conn(conn) {}
+MessageHandler::MessageHandler(const Connection* conn): conn(conn), log("log.txt") {
 
-/**
- * Set the log window to use.
- * @param logWindow The log window
- */
-/*public void setLogWindow(Logger logWindow) {
-	this.logWindow = logWindow;
-}*/
+}
+
 
 /**
  * Transmit a code (a constant from the Protocol class).
@@ -35,6 +30,13 @@ MessageHandler::MessageHandler(const Connection* conn): conn(conn) {}
  * @throws ConnectionClosedException, If the server died
  */
 void MessageHandler::sendCode(const Protocol code){
+	if (code == Protocol::COM_END) {
+		log << static_cast<unsigned char>(code) << endl << endl;
+	} else if (code == Protocol::ANS_END) {
+		log << static_cast<unsigned char>(code) << endl;
+	} else {
+		log << static_cast<unsigned char>(code) << " ";
+	}
 	conn->write(static_cast<unsigned char>(code)); //Static cast?
 }
 
@@ -57,6 +59,7 @@ void MessageHandler::sendInt(int value){
  */
 void MessageHandler::sendIntParameter(int param){
 	sendCode(Protocol::PAR_NUM);
+	log << param << " ";
 	sendInt(param);
 }
 
@@ -68,6 +71,7 @@ void MessageHandler::sendIntParameter(int param){
 void MessageHandler::sendStringParameter(string param){
 	sendCode(Protocol::PAR_STRING);
 	sendInt(param.length());
+	log << param << " ";
 	for (auto& c : param) {
 		conn->write(c);
 	}

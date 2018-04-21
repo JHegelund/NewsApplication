@@ -63,11 +63,11 @@ void listArticles(MessageHandler& mh, Database& db) {
 	int newsGroupIndex = mh.recvIntParameter();
 	if (mh.recvCode() != Protocol::COM_END)
 		return; // FAIL
-	
+
 	mh.sendCode(Protocol::ANS_LIST_ART);
 	try {
 		vector<pair<int, string>> articles = db.listArticles(newsGroupIndex);
-		
+
 		mh.sendCode(Protocol::ANS_ACK);
 		mh.sendIntParameter(articles.size());
 		for (auto& art : articles) {
@@ -111,6 +111,7 @@ void deleteArticle(MessageHandler& mh, Database& db) {
 		mh.sendCode(Protocol::ANS_ACK);
 	} else {
 		mh.sendCode(Protocol::ANS_NAK);
+		mh.sendCode(Protocol::ERR_NG_DOES_NOT_EXIST);
 	}
 	mh.sendCode(Protocol::ANS_END);
 }
@@ -120,7 +121,7 @@ void getArticle(MessageHandler& mh, Database& db) {
 	int articleIndex = mh.recvIntParameter();
 	if (mh.recvCode() != Protocol::COM_END)
 		return; // FAIL
- 
+
 	mh.sendCode(Protocol::ANS_GET_ART);
 	if (db.newsGroupExists(newsGroupIndex)) {
 		if (db.articleExists(newsGroupIndex, articleIndex)) {
@@ -186,7 +187,7 @@ int main(int argc, char* argv[]){
 						deleteArticle(mh, db); break;
 					case Protocol::COM_GET_ART:
 						getArticle(mh, db); break;
-					default: 
+					default:
 						throw "Protcolexception!"; break;
 				}
 			} catch (ConnectionClosedException&) {
