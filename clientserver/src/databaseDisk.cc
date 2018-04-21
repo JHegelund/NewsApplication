@@ -74,6 +74,13 @@ bool DatabaseDisk::deleteNewsGroup(int newsGroup){
 	std::string s = "database/" + std::to_string(newsGroup) + "-metadata.txt";
 	std::remove(s.c_str());
 
+	//remove the newsGroup from the newsGroups vector
+	auto it = std::find_if(newsGroups.begin(), newsGroups.end(), [&](std::pair<int, NewsGroup> current) -> bool {
+    return (current.first == newsGroup);
+  });
+	if(it != newsGroups.end())
+    newsGroups.erase(it);
+
 	s = std::to_string(newsGroup);
 	return removeFromMetadata("database/metadata.txt", s);
 }//DONE
@@ -97,7 +104,7 @@ bool DatabaseDisk::createNewsGroup(std::string name){
 	fout << std::to_string(id) + '-' + name << std::endl;
 	fout.close();
 
-	//create newsGroup-metadata file 
+	//create newsGroup-metadata file
 	fout.open("database/" + std::to_string(id) + "-metadata.txt");
 	fout.close();
 
@@ -142,7 +149,7 @@ bool DatabaseDisk::articleExists(int newsGroup, int article){
   		return false;
   	}
 }//DONE
-  	
+
 bool DatabaseDisk::deleteArticle(int newsGroup, int article){
 	if(articleExists(newsGroup, article)){
 		std::string s = "database/" + std::to_string(article) + ".txt";
@@ -152,23 +159,26 @@ bool DatabaseDisk::deleteArticle(int newsGroup, int article){
 	}
 }//DONE
 
-bool DatabaseDisk::createArticle(int newsGroup, std::string& title, std::string& article, std::string& author){
-	std::ofstream fout;
-	int index = generateArticleIndex();
+bool DatabaseDisk::createArticle(int newsGroup, std::string& title, std::string& author, std::string& article){
+	if(newsGroupExists(newsGroup)){
+		std::ofstream fout;
+		int index = generateArticleIndex();
 
-	//create the artile file
-	fout.open("database/" + std::to_string(index) + ".txt");
-	fout << title;
-	fout <<	article;
-	fout << author;
+		//create the artile file
+		fout.open("database/" + std::to_string(index) + ".txt");
+		fout << title << std::endl;
+		fout << author << std::endl;
+		fout <<	article << std::endl;
 
-	fout.close();
+		fout.close();
 
-	fout.open("database/" + std::to_string(newsGroup) + "-metadata.txt", std::ios::app);
-	fout << std::to_string(index) + "-" + title << std::endl;
-	fout.close();
+		fout.open("database/" + std::to_string(newsGroup) + "-metadata.txt", std::ios::app);
+		fout << std::to_string(index) + "-" + title << std::endl;
+		fout.close();
 
-	return true;
+		return true;
+	}
+	return false;
 }//DONE
 
 Article DatabaseDisk::getArticle(int newsGroup, int index){
@@ -182,9 +192,11 @@ Article DatabaseDisk::getArticle(int newsGroup, int index){
 			std::getline(fin, line);
 			article.title = line;
 			std::getline(fin, line);
-			article.article = line;
-			std::getline(fin, line);
 			article.author = line;
+			std::getline(fin, line);
+			article.article = line;
+			while(std::getline(fin, line))
+				article.article = article.article + "\n" + line;
 
 			fin.close();
 
@@ -215,6 +227,7 @@ std::vector<std::pair<int, std::string>> DatabaseDisk::listArticles(int newsGrou
 			return articles;
 		}
 	}
+	throw "NewsGroup doesn't exist.";
 }//DONE
 
 int DatabaseDisk::generateNewsGroupIndex(){
