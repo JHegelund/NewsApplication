@@ -38,7 +38,7 @@ bool DatabaseDisk::removeFromMetadata(std::string fileName, std::string index){
 		std::string s;
 		while(std::getline(fin, s)){
 			if(s.substr(0, index.size()) != index){
-				fout << s;
+				fout << s << std::endl;
 			}
 		}
 		fin.close();
@@ -94,7 +94,7 @@ bool DatabaseDisk::createNewsGroup(std::string name){
 	//add new newsGroup to the metadata file (open metadata.txt to append to file)
 	std::ofstream fout;
 	fout.open("database/metadata.txt",  std::ios::app);
-	fout << std::to_string(id) + '-' + name + '\n';
+	fout << std::to_string(id) + '-' + name << std::endl;
 	fout.close();
 
 	//create newsGroup-metadata file 
@@ -165,7 +165,7 @@ bool DatabaseDisk::createArticle(int newsGroup, std::string& title, std::string&
 	fout.close();
 
 	fout.open("database/" + std::to_string(newsGroup) + "-metadata.txt", std::ios::app);
-	fout << std::to_string(index) + "-" + title;
+	fout << std::to_string(index) + "-" + title << std::endl;
 	fout.close();
 
 	return true;
