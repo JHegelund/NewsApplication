@@ -28,7 +28,6 @@ public:
 	string recvStringParameter() const;
 private:
 	const Connection* conn; // the connection
-  ofstream log;
 	//Logger logWindow; // the log window
 	//void sendByte(const Connection& conn, int code);
 	//int recvByte(const Connection& conn);

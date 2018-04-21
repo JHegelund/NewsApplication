@@ -19,7 +19,7 @@ using namespace std;
  * Create a message handler.
  * @param conn The connection to use messages
 */
-MessageHandler::MessageHandler(const Connection* conn): conn(conn), log("log.txt") {
+MessageHandler::MessageHandler(const Connection* conn): conn(conn) {
 
 }
 
@@ -30,14 +30,12 @@ MessageHandler::MessageHandler(const Connection* conn): conn(conn), log("log.txt
  * @throws ConnectionClosedException, If the server died
  */
 void MessageHandler::sendCode(const Protocol code){
-	if (code == Protocol::COM_END) {
-		log << static_cast<unsigned char>(code) << endl << endl;
-	} else if (code == Protocol::ANS_END) {
-		log << static_cast<unsigned char>(code) << endl;
-	} else {
-		log << static_cast<unsigned char>(code) << " ";
-	}
-	conn->write(static_cast<unsigned char>(code)); //Static cast?
+	// if (code == Protocol::ANS_END) {
+	// 	cout << static_cast<unsigned char>(code) << endl;
+	// } else {
+	// 	cout << static_cast<unsigned char>(code) << " ";
+	// }
+	conn->write(static_cast<unsigned char>(code));
 }
 
 /**
@@ -59,7 +57,7 @@ void MessageHandler::sendInt(int value){
  */
 void MessageHandler::sendIntParameter(int param){
 	sendCode(Protocol::PAR_NUM);
-	log << param << " ";
+	// cout << param << " ";
 	sendInt(param);
 }
 
@@ -71,7 +69,7 @@ void MessageHandler::sendIntParameter(int param){
 void MessageHandler::sendStringParameter(string param){
 	sendCode(Protocol::PAR_STRING);
 	sendInt(param.length());
-	log << param << " ";
+	// cout << param << " ";
 	for (auto& c : param) {
 		conn->write(c);
 	}

@@ -236,7 +236,7 @@ void createArt(MessageHandler& mh, int ngID, string title, string author, string
 }
 
 int readNgId(string ngID){
-	int id = 0;
+	int id = -1;
 	try{
 		id = stoi(ngID);
 	} catch (exception& e){
@@ -247,7 +247,7 @@ int readNgId(string ngID){
 }
 
 int readArtId(string artID){
-	int id = 0;
+	int id = -1;
 	try{
 		id = stoi(artID);
 	} catch (exception& e){
@@ -305,7 +305,7 @@ int main(int argc, char* argv[]) {
 					//Read newsgroup id
 					cin >> cmd;
 					int ngID = readNgId(cmd);
-					if(ngID != 0){
+					if(ngID != -1){
 						//List articles within this newsgroup
 						listArticles(mh, ngID);
 					}
@@ -322,16 +322,16 @@ int main(int argc, char* argv[]) {
 				if(cmd == "newsgroup"){
 					cin >> cmd;
 					int ngID = readNgId(cmd);
-					if(ngID != 0){
+					if(ngID != -1){
 						deleteNG(mh, ngID);
 					}
 				} else if (cmd == "article"){
 					cin >> cmd;
 					int ngID = readNgId(cmd);
-					if(ngID != 0){
+					if(ngID != -1){
 						cin >> cmd;
 						int artID = readArtId(cmd);
-						if(artID != 0){
+						if(artID != -1){
 							deleteArt(mh, ngID, artID);
 						}
 					}
@@ -339,10 +339,10 @@ int main(int argc, char* argv[]) {
 			} else if (cmd == "Read"){
 				cin >> cmd;
 				int ngID = readNgId(cmd);
-				if(ngID != 0){
+				if(ngID != -1){
 					cin >> cmd;
 					int artID = readArtId(cmd);
-					if(artID != 0){
+					if(artID != -1){
 						readArt(mh, ngID, artID);
 					}
 				}
@@ -350,7 +350,7 @@ int main(int argc, char* argv[]) {
 				cout << "Enter the newgroup ID for the newsgroup where you want to place the article" << endl;
 				cin >> cmd;
 				int ngID = readNgId(cmd);
-				if(ngID != 0){
+				if(ngID != -1){
 					cout << "Enter the title" << endl;
 					//cin.ignore(numeric_limits<streamsize>::max(), '\n');
 					string title;
