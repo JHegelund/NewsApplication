@@ -79,6 +79,13 @@ bool DatabaseDisk::deleteNewsGroup(int newsGroup){
 }//DONE
 
 bool DatabaseDisk::createNewsGroup(std::string name){
+	auto it = std::find_if(newsGroups.begin(), newsGroups.end(), [&](std::pair<int, NewsGroup> current) -> bool {
+    	return (current.second.name == newsGroup);
+  	});
+
+	if(it == newsGroups.end())
+		return false;
+
 	NewsGroup ng = NewsGroup();
 	ng.name = name;
 	ng.articles = std::vector<std::pair<int, Article>>();
