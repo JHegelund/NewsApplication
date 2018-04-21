@@ -10,6 +10,7 @@
 #include <sstream>
 #include <vector>
 #include <utility>
+#include <limits>
 
 using namespace std;
 
@@ -70,7 +71,7 @@ void listArticles(MessageHandler& mh, int ngID){
 				cout << "Error newsgroup does not exist" << endl;
 			}
 		}
-		
+
 		if(mh.recvCode() != Protocol::ANS_END){
 			cout << "Protocol Violation" << endl;
 		} else {
@@ -274,7 +275,7 @@ int main(int argc, char* argv[]) {
 		cerr << "Usage: myclient host-name port-number" << endl;
 		exit(1);
 	}
-	
+
 	int port = -1;
 	try {
 		port = stoi(argv[2]);
@@ -282,7 +283,7 @@ int main(int argc, char* argv[]) {
 		cerr << "Wrong port number. " << e.what() << endl;
 		exit(1);
 	}
-	
+
 	Connection conn(argv[1], port);
 	if (!conn.isConnected()) {
 		cerr << "Connection attempt failed" << endl;
