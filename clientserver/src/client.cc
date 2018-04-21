@@ -291,7 +291,7 @@ int main(int argc, char* argv[]) {
 
 	cout << "Welcome! Use any of the commands below to use this application." << endl;
 	listCommands();
-	MessageHandler mh(conn);
+	MessageHandler mh(&conn);
 	string cmd;
 	while (cin >> cmd) {
 		try {
