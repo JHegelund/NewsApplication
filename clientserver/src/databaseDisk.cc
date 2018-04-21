@@ -5,7 +5,7 @@
 
 DatabaseDisk::DatabaseDisk(){
 	std::ifstream fin;
-	fin.open("metadata.txt");
+	fin.open("database/metadata.txt");
 
 	//open metadata file and recreate the filestructure of the database in memory
 	while(fin.is_open()){
@@ -32,7 +32,7 @@ bool DatabaseDisk::removeFromMetadata(std::string fileName, std::string index){
 	fin.open(fileName);
 
 	std::ofstream fout;
-	fout.open("temp.txt");
+	fout.open("database/temp.txt");
 
 	while(fin.is_open()){
 		std::string s;
@@ -45,7 +45,7 @@ bool DatabaseDisk::removeFromMetadata(std::string fileName, std::string index){
 	}
 	fout.close();
 
-	std::string oldName = "temp.txt";
+	std::string oldName = "database/temp.txt";
 	std::remove(fileName.c_str());
 	std::rename(oldName.c_str(), fileName.c_str());
 
@@ -54,7 +54,7 @@ bool DatabaseDisk::removeFromMetadata(std::string fileName, std::string index){
 
 bool DatabaseDisk::deleteNewsGroup(int newsGroup){
 	std::ifstream fin;
-	fin.open(std::to_string(newsGroup)+"-metadata.txt");
+	fin.open("database/" + std::to_string(newsGroup)+"-metadata.txt");
 
 	while(fin.is_open()){
 		std::string line;
@@ -75,10 +75,17 @@ bool DatabaseDisk::deleteNewsGroup(int newsGroup){
 	std::remove(s.c_str());
 
 	s = std::to_string(newsGroup);
-	return removeFromMetadata("metadata.txt", s);
+	return removeFromMetadata("database/metadata.txt", s);
 }//DONE
 
 bool DatabaseDisk::createNewsGroup(std::string name){
+	auto it = std::find_if(newsGroups.begin(), newsGroups.end(), [&](std::pair<int, NewsGroup> current) -> bool {
+    	return (current.second.name == name);
+  	});
+
+	if(it != newsGroups.end())
+		return false;
+
 	NewsGroup ng = NewsGroup();
 	ng.name = name;
 	ng.articles = std::vector<std::pair<int, Article>>();
@@ -86,12 +93,12 @@ bool DatabaseDisk::createNewsGroup(std::string name){
 
 	//add new newsGroup to the metadata file (open metadata.txt to append to file)
 	std::ofstream fout;
-	fout.open("metadata.txt",  std::ios::app);
+	fout.open("database/metadata.txt",  std::ios::app);
 	fout << std::to_string(id) + '-' + name + '\n';
 	fout.close();
 
 	//create newsGroup-metadata file 
-	fout.open(std::to_string(id) + "-metadata.txt");
+	fout.open("database/" + std::to_string(id) + "-metadata.txt");
 	fout.close();
 
   	//track the newsGroup in the 'newsGroups' vector
@@ -123,7 +130,7 @@ bool DatabaseDisk::articleExists(int newsGroup, int article){
 	if(newsGroupExists(newsGroup)){
   		std::ifstream fin;
   		//open metadata file for specified newsGroup
-  		fin.open(std::to_string(newsGroup) + "-metadata.txt");
+  		fin.open("database/" + std::to_string(newsGroup) + "-metadata.txt");
 
   		std::string line;
   		//see if the metadata contains the specified article index
@@ -138,10 +145,10 @@ bool DatabaseDisk::articleExists(int newsGroup, int article){
   	
 bool DatabaseDisk::deleteArticle(int newsGroup, int article){
 	if(articleExists(newsGroup, article)){
-		std::string s = std::to_string(article) + ".txt";
+		std::string s = "database/" + std::to_string(article) + ".txt";
 		std::remove(s.c_str());
 
-		return removeFromMetadata(newsGroup + "-metadata.txt", std::to_string(article));
+		return removeFromMetadata("database/" + std::to_string(newsGroup) + "-metadata.txt", std::to_string(article));
 	}
 }//DONE
 
@@ -150,14 +157,14 @@ bool DatabaseDisk::createArticle(int newsGroup, std::string& title, std::string&
 	int index = generateArticleIndex();
 
 	//create the artile file
-	fout.open(std::to_string(index) + ".txt");
+	fout.open("database/" + std::to_string(index) + ".txt");
 	fout << title;
 	fout <<	article;
 	fout << author;
 
 	fout.close();
 
-	fout.open(std::to_string(newsGroup) + "-metadata.txt", std::ios::app);
+	fout.open("database/" + std::to_string(newsGroup) + "-metadata.txt", std::ios::app);
 	fout << std::to_string(index) + "-" + title;
 	fout.close();
 
@@ -169,7 +176,7 @@ Article DatabaseDisk::getArticle(int newsGroup, int index){
 		Article article = Article();
 
 		std::ifstream fin;
-		fin.open(std::to_string(index) + ".txt");
+		fin.open("database/" + std::to_string(index) + ".txt");
 		while(fin.is_open()){
 			std::string line;
 			std::getline(fin, line);
@@ -190,7 +197,7 @@ std::vector<std::pair<int, std::string>> DatabaseDisk::listArticles(int newsGrou
 	if(newsGroupExists(newsGroup)){
 
 		std::ifstream fin;
-		fin.open(std::to_string(newsGroup) + "-metadata.txt");
+		fin.open("database/" + std::to_string(newsGroup) + "-metadata.txt");
 
 		std::vector<std::pair<int, std::string>> articles = std::vector<std::pair<int, std::string>>();
 
