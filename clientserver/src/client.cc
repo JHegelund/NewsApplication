@@ -1,6 +1,6 @@
-#include "../protocol.h"
-#include "../connection.h"
-#include "../connectionclosedexception.h"
+#include "protocol.h"
+#include "connection.h"
+#include "connectionclosedexception.h"
 #include "messagehandler.h"
 
 #include <iostream>

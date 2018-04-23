@@ -30,11 +30,6 @@ MessageHandler::MessageHandler(const Connection* conn): conn(conn) {
  * @throws ConnectionClosedException, If the server died
  */
 void MessageHandler::sendCode(const Protocol code){
-	// if (code == Protocol::ANS_END) {
-	// 	cout << static_cast<unsigned char>(code) << endl;
-	// } else {
-	// 	cout << static_cast<unsigned char>(code) << " ";
-	// }
 	conn->write(static_cast<unsigned char>(code));
 }
 
@@ -57,7 +52,6 @@ void MessageHandler::sendInt(int value){
  */
 void MessageHandler::sendIntParameter(int param){
 	sendCode(Protocol::PAR_NUM);
-	// cout << param << " ";
 	sendInt(param);
 }
 
@@ -69,7 +63,6 @@ void MessageHandler::sendIntParameter(int param){
 void MessageHandler::sendStringParameter(string param){
 	sendCode(Protocol::PAR_STRING);
 	sendInt(param.length());
-	// cout << param << " ";
 	for (auto& c : param) {
 		conn->write(c);
 	}
@@ -128,23 +121,3 @@ string MessageHandler::recvStringParameter() const{
 	}
 	return word;
 }
-/*
-void MessageHandler::sendByte(const Connection& conn, int code){
-	try {
-		conn.write(code);
-	} catch (ConnectionClosedException&) {
-		cout << " no reply from server. Exiting." << endl;
-		exit(1);
-	}
-}
-
-int MessageHandler::recvByte(const Connection& conn){
-	try{
-		int code = conn.read();
-	} catch(ConnectionClosedException&){
-		cout << " no reply from server. Exiting." << endl;
-		exit(1);
-	}
-	return code;
-}
-*/

@@ -17,21 +17,15 @@
 class MessageHandler {
 public:
 	MessageHandler(const Connection* conn);
-	//void setLogWindow(Logger logWindow);
 	void sendCode(const Protocol code);
-	void sendInt(int value);
 	void sendIntParameter(int param);
 	void sendStringParameter(string param);
 	Protocol recvCode() const;
-	int recvInt() const;
 	int recvIntParameter() const;
 	string recvStringParameter() const;
 private:
-	const Connection* conn; // the connection
-	//Logger logWindow; // the log window
-	//void sendByte(const Connection& conn, int code);
-	//int recvByte(const Connection& conn);
-
-
+	void sendInt(int value);	
+	int recvInt() const;
+	const Connection* conn;
 };
 #endif
