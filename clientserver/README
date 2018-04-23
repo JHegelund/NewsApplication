@@ -8,3 +8,7 @@ CPP 2005 Project, Communication Classes
 - The subdirectory 'test' contains the test programs myclient and myserver,
   as defined in the project description, section 5.3.
 - 'make' makes the executables myclient and myserver.
+
+- To build the client and server, go to NewsApplication/clientserver/src and run 'make'.
+- To start the server with the primary memory database run ./mainserver 'port-nbr'.
+- To start the server with disk memory database run ./mainserver 'port-nbr' "disk".
