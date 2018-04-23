@@ -10,5 +10,6 @@
 
 - To build the client and server, go to NewsApplication/clientserver/src and run 'make'.
 - To start the server with the primary memory database run ./mainserver 'port-nbr'.
-- To start the server with disk memory database run ./mainserver 'port-nbr' "disk".
+- To start the server with disk memory database run ./mainserver 'port-number' "disk".
+- To start the client run ./client 'host-name' 'port-number'.
 ------------------------------------
