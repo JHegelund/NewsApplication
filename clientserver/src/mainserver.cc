@@ -6,6 +6,7 @@
 #include "databaseHNS.h"
 #include "databaseDisk.h"
 #include <iostream>
+#include <cstring>
 
 using namespace std;
 
@@ -146,7 +147,7 @@ void getArticle(MessageHandler& mh, Database& db) {
 
 int main(int argc, char* argv[]){
 	if (argc != 2 && argc != 3) {
-		cerr << "Usage: myserver port-number [database path]" << endl;
+		cerr << "Usage: myserver port-number [disk]" << endl;
 		exit(1);
 	}
 
@@ -163,9 +164,13 @@ int main(int argc, char* argv[]){
 		cerr << "Server initialization error." << endl;
 		exit(1);
 	}
-	DatabaseDisk db;
 
-
+	Database* db = nullptr;
+	if (argc == 3 && strcmp(argv[2], "disk") == 0) {
+		db = new DatabaseDisk();
+	} else {
+		db = new DatabaseHNS;
+	}
 
 	while (true) {
 		auto conn = server.waitForActivity();
@@ -177,19 +182,19 @@ int main(int argc, char* argv[]){
 				p = mh.recvCode();
 				switch(p) {
 					case Protocol::COM_LIST_NG:
-						listNewsGroups(mh, db); break;
+						listNewsGroups(mh, *db); break;
 					case Protocol::COM_CREATE_NG:
-						createNewsGroup(mh, db); break;
+						createNewsGroup(mh, *db); break;
 					case Protocol::COM_DELETE_NG:
-						deleteNewsGroup(mh, db); break;
+						deleteNewsGroup(mh, *db); break;
 					case Protocol::COM_LIST_ART:
-						listArticles(mh, db); break;
+						listArticles(mh, *db); break;
 					case Protocol::COM_CREATE_ART:
-						createArticle(mh, db); break;
+						createArticle(mh, *db); break;
 					case Protocol::COM_DELETE_ART:
-						deleteArticle(mh, db); break;
+						deleteArticle(mh, *db); break;
 					case Protocol::COM_GET_ART:
-						getArticle(mh, db); break;
+						getArticle(mh, *db); break;
 					default:
 						throw "Protcolexception!"; break;
 				}
