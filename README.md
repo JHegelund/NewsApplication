@@ -1,29 +1,14 @@
 ## Newsarticle program (c++ project)
-
-Ses nästa gång: torsdag 11/4 kl 14:00
 ------------------------------------
+- The directory clientserver contains the communication classes Connection and Server,
+  and the auxiliary classes ConnectionClosedException and Protocol. These
+  classes are defined in the project description, sections 5.2 and 6.
+- 'make' makes the library libclientserver.a.
+- The subdirectory 'test' contains the test programs myclient and myserver,
+  as defined in the project description, section 5.3.
+- 'make' makes the executables myclient and myserver.
 
-### TODO:
-#### CLIENT (setup structure: Hegelund)
-
-* Establish connection on startup
-* Make requests to server
-* Artiklar: CRUD (generera även unikt id)
-* Newsgroups: CRUD (generera även unikt id)
-* Read server response (see provided protocol)
-* Navigation
-* Error management
-------------------------------------
-#### SERVER (setup structure: Bohlin)
-
-* Setup internal server (provided)
-* Recieve requests from client (see provided protocol)
-* Make requests to DB (CRUD)
-* Error management
-------------------------------------
-#### DATABASE (setup DB for HNS: Will)
-
-* Interface:
-* To HNS at first
-* To .txt files after
+- To build the client and server, go to NewsApplication/clientserver/src and run 'make'.
+- To start the server with the primary memory database run ./mainserver 'port-nbr'.
+- To start the server with disk memory database run ./mainserver 'port-nbr' "disk".
 ------------------------------------
